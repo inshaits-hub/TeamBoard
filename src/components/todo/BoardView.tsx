@@ -42,6 +42,7 @@ function DroppableColumn({
   return (
     <div
       ref={setNodeRef}
+      data-lovable-todo-column={column.id}
       className={`flex h-full min-w-[260px] flex-1 flex-col rounded-2xl p-3 transition-colors ${
         isOver ? "bg-app-muted" : "bg-app-muted/50"
       }`}
