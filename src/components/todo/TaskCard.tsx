@@ -35,6 +35,7 @@ export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
   return (
     <div
       ref={setNodeRef}
+      data-lovable-todo-card={task.id}
       style={style}
       className={`
         group relative rounded-2xl border border-border/50 bg-app-card p-4 shadow-sm transition-all
