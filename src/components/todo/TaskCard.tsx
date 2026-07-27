@@ -38,12 +38,13 @@ export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
       data-lovable-todo-card={task.id}
       style={style}
       className={`
-        group relative rounded-2xl border border-border/50 bg-app-card p-4 shadow-sm transition-all
-        hover:shadow-md
+        group relative cursor-grab rounded-2xl border border-border/50 bg-app-card p-4 shadow-sm transition-all
+        hover:shadow-md active:cursor-grabbing
         ${isDragging ? "opacity-30" : "opacity-100"}
         ${isOverlay ? "rotate-2 shadow-lg" : ""}
       `}
       {...attributes}
+      {...listeners}
     >
       <div className="flex items-start justify-between gap-2">
         <Badge
@@ -52,12 +53,12 @@ export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
         >
           {label.name}
         </Badge>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <Button
             variant="ghost"
             size="icon"
             className="drag-handle h-6 w-6 text-muted-foreground hover:text-foreground"
-            {...listeners}
+            onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
           </Button>
@@ -65,7 +66,10 @@ export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={() => onEdit(task)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(task);
+            }}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
