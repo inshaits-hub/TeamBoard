@@ -10,11 +10,17 @@
  * The @theme inline block maps CSS custom properties to Tailwind utility
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
- * The :root and .dark blocks define the actual color values using oklch.
+ * Three themes are defined below, each with its own [data-theme="..."] block
+ * so every value (background, primary, borders, etc.) actually changes when
+ * you switch themes:
+ *   - pastel-light : warm cream + forest green (earthy pastel, light)
+ *   - light        : neutral white + blue accent (plain, light)
+ *   - dark         : neutral slate + indigo accent (plain, dark)
+ *
  * All colors MUST use oklch format.
  *
  * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 1. Add the variable to every [data-theme="..."] block below
  * 2. Register it in @theme inline as --color-<name>: var(--<name>)
  */
 
@@ -77,27 +83,31 @@
   --color-label-research-foreground: var(--label-research-foreground);
 }
 
+/* ============================================================
+   Defaults (used before ThemeContext applies a data-theme attr)
+   Mirrors pastel-light so there's no flash of unstyled content.
+   ============================================================ */
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --background: oklch(0.944 0.025 89.2);
+  --foreground: oklch(0.28 0.05 138);
+  --card: oklch(0.98 0.012 89.2);
+  --card-foreground: oklch(0.28 0.05 138);
+  --popover: oklch(0.98 0.012 89.2);
+  --popover-foreground: oklch(0.28 0.05 138);
+  --primary: oklch(0.434 0.071 138);
+  --primary-foreground: oklch(0.98 0.012 89.2);
+  --secondary: oklch(0.9 0.03 132);
+  --secondary-foreground: oklch(0.3 0.05 138);
+  --muted: oklch(0.9 0.03 132);
+  --muted-foreground: oklch(0.5 0.04 130);
+  --accent: oklch(0.9 0.03 132);
+  --accent-foreground: oklch(0.3 0.05 138);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.85 0.03 120);
+  --input: oklch(0.85 0.03 120);
+  --ring: oklch(0.434 0.071 138);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -112,72 +122,219 @@
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
 
-  /* Pastel TODO app tokens — light mode */
-  --app-bg: oklch(0.985 0.006 85);
-  --app-card: oklch(1 0 0);
-  --app-card-foreground: oklch(0.2 0.04 264);
-  --app-muted: oklch(0.96 0.01 260);
-  --app-primary: oklch(0.6 0.18 280);
-  --app-primary-foreground: oklch(1 0 0);
-  --label-copywriting: oklch(0.93 0.05 330);
-  --label-copywriting-foreground: oklch(0.45 0.12 330);
-  --label-design: oklch(0.91 0.05 250);
-  --label-design-foreground: oklch(0.4 0.12 250);
-  --label-illustration: oklch(0.93 0.05 150);
-  --label-illustration-foreground: oklch(0.35 0.12 150);
-  --label-research: oklch(0.93 0.05 70);
-  --label-research-foreground: oklch(0.45 0.12 50);
+  --app-bg: oklch(0.944 0.025 89.2);
+  --app-card: oklch(0.98 0.012 89.2);
+  --app-card-foreground: oklch(0.28 0.05 138);
+  --app-muted: oklch(0.9 0.03 132);
+  --app-primary: oklch(0.434 0.071 138);
+  --app-primary-foreground: oklch(0.98 0.012 89.2);
+
+  /* Label tokens — earthy palette (sage / olive / forest / gold) */
+  --label-copywriting: oklch(0.728 0.138 89.7);
+  --label-copywriting-foreground: oklch(0.3 0.06 89.7);
+  --label-design: oklch(0.814 0.047 132.1);
+  --label-design-foreground: oklch(0.35 0.05 132.1);
+  --label-illustration: oklch(0.662 0.088 119.8);
+  --label-illustration-foreground: oklch(0.98 0.02 119.8);
+  --label-research: oklch(0.512 0.09 62.2);
+  --label-research-foreground: oklch(0.96 0.02 62.2);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+/* ============================================================
+   1. PASTEL LIGHT — warm cream background, forest green primary,
+      sage/olive secondary. Earthy and soft.
+   ============================================================ */
+[data-theme="pastel-light"] {
+  --background: oklch(0.944 0.025 89.2);
+  --foreground: oklch(0.28 0.05 138);
 
-  /* Pastel TODO app tokens — dark mode */
-  --app-bg: oklch(0.2 0.03 264);
-  --app-card: oklch(0.24 0.03 264);
-  --app-card-foreground: oklch(0.95 0.01 260);
-  --app-muted: oklch(0.28 0.03 264);
-  --app-primary: oklch(0.65 0.18 280);
+  --card: oklch(0.98 0.012 89.2);
+  --card-foreground: oklch(0.28 0.05 138);
+
+  --popover: oklch(0.98 0.012 89.2);
+  --popover-foreground: oklch(0.28 0.05 138);
+
+  --primary: oklch(0.434 0.071 138);
+  --primary-foreground: oklch(0.98 0.012 89.2);
+
+  --secondary: oklch(0.90 0.03 132);
+  --secondary-foreground: oklch(0.30 0.05 138);
+
+  --accent: oklch(0.90 0.03 132);
+  --accent-foreground: oklch(0.30 0.05 138);
+
+  --muted: oklch(0.90 0.03 132);
+  --muted-foreground: oklch(0.50 0.04 130);
+
+  --border: oklch(0.85 0.03 120);
+  --input: oklch(0.85 0.03 120);
+  --ring: oklch(0.73 0.13 89);
+
+  --app-bg: oklch(0.944 0.025 89.2);
+  --app-card: oklch(0.98 0.012 89.2);
+  --app-card-foreground: oklch(0.28 0.05 138);
+  --app-muted: oklch(0.90 0.03 132);
+  --app-primary: oklch(0.434 0.071 138);
+  --app-primary-foreground: oklch(0.98 0.012 89.2);
+}
+
+/* ============================================================
+   2. LIGHT — neutral, non-earthy. White background, blue primary.
+      Deliberately plain/clean so it reads as a different family
+      from pastel-light, not just a lighter shade of it.
+   ============================================================ */
+[data-theme="light"] {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  --primary: oklch(0.55 0.20 260);
+  --primary-foreground: oklch(0.98 0 0);
+
+  --secondary: oklch(0.95 0.01 260);
+  --secondary-foreground: oklch(0.20 0.02 260);
+
+  --accent: oklch(0.95 0.01 260);
+  --accent-foreground: oklch(0.20 0.02 260);
+
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.50 0 0);
+
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: oklch(0.55 0.20 260);
+
+  --app-bg: oklch(0.99 0 0);
+  --app-card: oklch(1 0 0);
+  --app-card-foreground: oklch(0.15 0 0);
+  --app-muted: oklch(0.95 0 0);
+  --app-primary: oklch(0.55 0.20 260);
+  --app-primary-foreground: oklch(0.98 0 0);
+}
+
+/* ============================================================
+   3. DARK — fully achromatic near-black background (zero
+      chroma, no green/blue tint) with a violet accent. Kept
+      deliberately colorless so it can't be mistaken for
+      Pastel Dark's saturated warm green.
+   ============================================================ */
+[data-theme="dark"],
+.dark {
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.96 0 0);
+
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.96 0 0);
+
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.96 0 0);
+
+  --primary: oklch(0.64 0.24 296);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.94 0 0);
+
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(0.94 0 0);
+
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+
+  --border: oklch(0.26 0 0);
+  --input: oklch(0.26 0 0);
+  --ring: oklch(0.64 0.24 296);
+
+  --app-bg: oklch(0.13 0 0);
+  --app-card: oklch(0.18 0 0);
+  --app-card-foreground: oklch(0.96 0 0);
+  --app-muted: oklch(0.22 0 0);
+  --app-primary: oklch(0.64 0.24 296);
   --app-primary-foreground: oklch(1 0 0);
-  --label-copywriting: oklch(0.35 0.08 330);
-  --label-copywriting-foreground: oklch(0.9 0.05 330);
-  --label-design: oklch(0.32 0.08 250);
-  --label-design-foreground: oklch(0.9 0.05 250);
-  --label-illustration: oklch(0.32 0.08 150);
-  --label-illustration-foreground: oklch(0.9 0.05 150);
-  --label-research: oklch(0.32 0.08 70);
-  --label-research-foreground: oklch(0.9 0.05 70);
+}
+
+/* ===== Liquid Glass UI Utilities ===== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.dark .glass,
+[data-theme="dark"] .glass {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.dark .glass-strong,
+[data-theme="dark"] .glass-strong {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+}
+
+.dark .glass-card,
+[data-theme="dark"] .glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth transitions for theme switching */
+*,
+*::before,
+*::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+}
+
+.dark ::-webkit-scrollbar-thumb,
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 @layer base {

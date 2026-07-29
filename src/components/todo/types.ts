@@ -2,7 +2,7 @@ export type Priority = "low" | "medium" | "high";
 
 export type LabelType = "copywriting" | "design" | "illustration" | "research";
 
-export type ColumnId = "todo" | "in-progress" | "review" | "done";
+export type ColumnId = "todo" | "in-progress" | "review" | "done" | "paused";
 
 export interface Task {
   id: string;
@@ -25,10 +25,11 @@ export interface ColumnDef {
 }
 
 export const COLUMNS: ColumnDef[] = [
-  { id: "todo", title: "Task Ready", color: "bg-slate-400" },
-  { id: "in-progress", title: "On Progress", color: "bg-indigo-400" },
-  { id: "review", title: "Needs Review", color: "bg-amber-400" },
-  { id: "done", title: "Done", color: "bg-emerald-400" },
+  { id: "todo", title: "Task Ready", color: "bg-[#F3ECDA]" },
+  { id: "in-progress", title: "On Progress", color: "bg-[#8C9B5C]" },
+  { id: "review", title: "Needs Review", color: "bg-[#C9A227]" },
+  { id: "done", title: "Done", color: "bg-[#3D5A33]" },
+  { id: "paused", title: "Paused", color: "bg-[#8B5A2B]" },
 ];
 
 export const LABELS: Record<
@@ -61,7 +62,7 @@ export const PRIORITIES: Record<
   Priority,
   { name: string; color: string }
 > = {
-  low: { name: "Low", color: "bg-slate-200 text-slate-600" },
-  medium: { name: "Medium", color: "bg-amber-100 text-amber-700" },
-  high: { name: "High", color: "bg-rose-100 text-rose-700" },
+  low: { name: "Low", color: "bg-[#B7C9AA]/50 text-[#3D5A33]" },
+  medium: { name: "Medium", color: "bg-[#C9A227]/25 text-[#8B5A2B]" },
+  high: { name: "High", color: "bg-[#8B5A2B]/25 text-[#8B5A2B]" },
 };

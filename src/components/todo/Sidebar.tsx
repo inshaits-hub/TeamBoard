@@ -2,6 +2,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ACTIVITIES } from "./data";
 import { COLUMNS } from "./types";
+import { useSidebarPanelOpen } from "./sidebarStore";
 import type { Task } from "./types";
 
 interface SidebarProps {
@@ -9,7 +10,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ tasks }: SidebarProps) {
-  const total = tasks.length || 1;
+  const isOpen = useSidebarPanelOpen();
+
   const progressData = [
     { label: "Copywriting", done: tasks.filter((t) => t.label === "copywriting" && t.column === "done").length, total: tasks.filter((t) => t.label === "copywriting").length },
     { label: "Illustrations", done: tasks.filter((t) => t.label === "illustration" && t.column === "done").length, total: tasks.filter((t) => t.label === "illustration").length },
@@ -21,8 +23,12 @@ export function Sidebar({ tasks }: SidebarProps) {
     count: tasks.filter((t) => t.column === col.id).length,
   }));
 
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <aside className="hidden w-72 shrink-0 flex-col gap-6 border-l border-border/40 bg-app-bg/50 p-6 lg:flex">
+    <aside className="hidden w-72 shrink-0 flex-col gap-6 border-l border-white/10 bg-white/30 p-6 backdrop-blur-md lg:flex dark:bg-black/20">
       <div>
         <h2 className="text-sm font-semibold text-app-card-foreground">Task Progress</h2>
         <div className="mt-4 space-y-4">
@@ -49,7 +55,7 @@ export function Sidebar({ tasks }: SidebarProps) {
           {columnCounts.map((col) => (
             <div
               key={col.id}
-              className="flex items-center justify-between rounded-xl bg-app-card px-3 py-2 text-xs"
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/40 px-3 py-2 text-xs backdrop-blur-sm dark:bg-white/10"
             >
               <div className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${col.color}`} />
@@ -67,7 +73,7 @@ export function Sidebar({ tasks }: SidebarProps) {
           {ACTIVITIES.map((activity) => (
             <div key={activity.id} className="flex gap-3">
               <Avatar className="h-8 w-8 shrink-0 text-[10px]">
-                <AvatarFallback className={`${activity.color} text-white`}>
+                <AvatarFallback className={`${activity.color} text-[#F8F3E6] font-semibold`}>
                   {activity.user[0]}
                 </AvatarFallback>
               </Avatar>

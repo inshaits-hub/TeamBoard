@@ -34,8 +34,8 @@ export function ListView({
   };
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-app-card shadow-sm">
-      <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 border-b border-border/50 px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:grid-cols-[auto_1fr_auto_auto_auto_auto_auto]">
+    <div className="rounded-2xl border border-white/10 bg-white/30 shadow-sm backdrop-blur-sm dark:bg-white/5">
+      <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 border-b border-white/10 px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:grid-cols-[auto_1fr_auto_auto_auto_auto_auto]">
         <span className="sr-only">Done</span>
         <span>Task</span>
         <span className="hidden sm:block">Label</span>
@@ -45,14 +45,20 @@ export function ListView({
         <span className="text-right">Actions</span>
       </div>
 
-      <ul className="divide-y divide-border/50">
+      <ul className="divide-y divide-white/10">
         {tasks.map((task) => {
           const label = LABELS[task.label];
           const priority = PRIORITIES[task.priority];
+          const isPaused = task.column === "paused";
+          const isDone = task.column === "done";
           return (
             <li
               key={task.id}
-              className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-3 hover:bg-app-muted/30 sm:grid-cols-[auto_1fr_auto_auto_auto_auto_auto]"
+              className={`grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-3 transition-colors sm:grid-cols-[auto_1fr_auto_auto_auto_auto_auto] ${
+                isPaused
+                  ? "bg-amber-50/30 dark:bg-amber-900/10 opacity-70 hover:opacity-100"
+                  : "hover:bg-white/30 dark:hover:bg-white/5"
+              }`}
             >
               <Checkbox
                 checked={task.column === "done"}
