@@ -96,6 +96,7 @@ export function TodoApp() {
 
   const handleSignOut = useCallback(() => {
     setSignOutOpen(false);
+    toast.success("Signed out successfully");
     logout();
   }, [logout]);
 

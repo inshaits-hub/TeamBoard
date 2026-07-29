@@ -25,33 +25,21 @@ export function SignOutDialog({
 }: SignOutDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent
-        className="
-          sm:max-w-sm
-          rounded-3xl
-          border border-[#C6C7A5]
-          bg-[#F8F3E6]
-          shadow-2xl
-          backdrop-blur-xl
-        "
-      >
+      <AlertDialogContent className="sm:max-w-sm rounded-3xl border-border/50 bg-app-card shadow-2xl">
         <AlertDialogHeader className="space-y-4">
-          {/* Icon */}
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#C6C7A5] shadow-md">
-            <LogOut className="h-7 w-7 text-[#465E20]" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 shadow-md">
+            <LogOut className="h-7 w-7 text-destructive" />
           </div>
 
-          {/* Title */}
-          <AlertDialogTitle className="text-center text-3xl font-bold text-[#465E20]">
+          <AlertDialogTitle className="text-center text-3xl font-bold text-app-card-foreground">
             Sign Out
           </AlertDialogTitle>
 
-          {/* Description */}
-          <AlertDialogDescription className="text-center text-base leading-7 text-[#7A5426]">
+          <AlertDialogDescription className="text-center text-base leading-7 text-muted-foreground">
             {userName ? (
               <>
                 Are you sure you want to sign out,{" "}
-                <span className="font-semibold text-[#465E20]">
+                <span className="font-semibold text-app-card-foreground">
                   {userName}
                 </span>
                 ?
@@ -62,48 +50,20 @@ export function SignOutDialog({
 
             <br />
 
-            <span className="text-sm text-[#6E684F]">
+            <span className="text-sm text-muted-foreground/70">
               You'll need to sign in again to access your tasks.
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter className="mt-4 flex-row gap-3 sm:justify-center">
-          {/* Cancel Button */}
-          <AlertDialogCancel
-            className="
-              flex-1
-              rounded-xl
-              border
-              border-[#465E20]
-              bg-[#F8F3E6]
-              text-[#465E20]
-              font-medium
-              transition-all
-              hover:bg-[#C6C7A5]
-              hover:text-[#465E20]
-              hover:border-[#465E20]
-              sm:flex-none
-            "
-          >
+          <AlertDialogCancel className="flex-1 rounded-xl sm:flex-none">
             Cancel
           </AlertDialogCancel>
 
-          {/* Sign Out Button */}
           <AlertDialogAction
             onClick={onConfirm}
-            className="
-              flex-1
-              rounded-xl
-              bg-[#465E20]
-              text-[#F8F3E6]
-              font-semibold
-              shadow-md
-              transition-all
-              hover:bg-[#5B6D2B]
-              hover:shadow-lg
-              sm:flex-none
-            "
+            className="flex-1 rounded-xl bg-destructive text-destructive-foreground font-semibold shadow-md transition-all hover:bg-destructive/90 sm:flex-none"
           >
             Sign Out
           </AlertDialogAction>
@@ -112,4 +72,3 @@ export function SignOutDialog({
     </AlertDialog>
   );
 }
-

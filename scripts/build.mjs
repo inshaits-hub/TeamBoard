@@ -7,10 +7,11 @@ const buildResult = spawnSync("npx", ["vite", "build"], {
   shell: true,
 });
 
-const clientAssetsExist = existsSync(join(process.cwd(), "dist", "client", "assets"));
+const publicDir = join(process.cwd(), ".output", "public");
+const assetsExist = existsSync(join(publicDir, "assets"));
 
-if (!clientAssetsExist) {
-  console.error("Client build did not produce dist/client/assets — aborting.");
+if (!assetsExist) {
+  console.error("Client build did not produce .output/public/assets — aborting.");
   process.exit(1);
 }
 
