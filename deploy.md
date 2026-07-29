@@ -1,50 +1,40 @@
 # GitHub Pages Deployment Guide
 
-This document explains how this TanStack Start app is configured for GitHub Pages deployment.
-
-## The Challenge
-
-TanStack Start is an **SSR framework** (powered by Nitro). It normally requires a Node.js server to render HTML at runtime. GitHub Pages only serves **static files** — it cannot run server-side code.
-
-To deploy to GitHub Pages, we generate a static HTML shell that loads the client-side JavaScript bundle, turning the SSR app into a **client-rendered SPA**.
+This app is a **pure React + Vite SPA** (no SSR). It's designed to deploy to GitHub Pages easily.
 
 ## How It Works
 
-### 1. Build Pipeline
+### Build Pipeline
 
 ```
-npm run build  ──>  Vite + Nitro build  ──>  .output/public/assets/
-                                                    │
-                                           scripts/generate-shell.mjs
-                                                    │
-                                           .output/public/index.html
-                                           .output/public/404.html
+npm run build  ──>  Vite build  ──>  dist/ (index.html + assets/ + 404.html)
 ```
 
-- `vite build` compiles the app and outputs client assets to `.output/public/assets/`
-- `scripts/generate-shell.mjs` scans the built assets, creates an `index.html` that loads them, and copies it to `404.html` (for SPA routing fallback on GitHub Pages)
+- `vite build` compiles the React app into static files in `dist/`
+- `scripts/build.mjs` runs `vite build` then copies `index.html` to `404.html` (for SPA routing fallback)
 
-### 2. Key Files
+### Key Files
 
 | File | Purpose |
 |---|---|
-| `scripts/build.mjs` | Runs `vite build`, verifies assets exist, then calls the shell generator |
-| `scripts/generate-shell.mjs` | Reads hashed filenames from `.output/public/assets/` and writes `index.html` + `404.html` |
-| `.github/workflows/deploy.yml` | GitHub Actions workflow triggered on push to `main` |
+| `index.html` | Vite entry point — loads `src/main.tsx` |
+| `src/main.tsx` | React entry — `createRoot` + providers + auth gating |
+| `scripts/build.mjs` | Build script that copies index.html → 404.html |
+| `.github/workflows/deploy.yml` | GitHub Actions workflow |
 
-### 3. GitHub Actions Workflow
+### GitHub Actions Workflow
 
 The workflow in `.github/workflows/deploy.yml`:
 
 1. Checks out the repo
 2. Installs dependencies (`npm ci`)
-3. Runs `node scripts/build.mjs` (builds + generates index.html)
-4. Uploads `.output/public/` as a Pages artifact
+3. Runs `node scripts/build.mjs` (builds + copies 404.html)
+4. Uploads `dist/` as a Pages artifact
 5. Deploys to GitHub Pages
 
-### 4. Base Path
+### Base Path
 
-The `vite.config.ts` sets `base: "/TeamBoard/"` so all asset paths resolve correctly under `https://<user>.github.io/TeamBoard/`.
+`vite.config.ts` sets `base: "/TeamBoard/"` so all asset paths resolve correctly under `https://<user>.github.io/TeamBoard/`.
 
 ## Deployment Steps
 
@@ -57,13 +47,12 @@ The `vite.config.ts` sets `base: "/TeamBoard/"` so all asset paths resolve corre
 
 ```bash
 npm install
-node scripts/build.mjs
-# Output is in .output/public/
-npx serve .output/public
+npm run build
+npx serve dist
 ```
 
 ## Important Notes
 
-- The app runs fully client-side on GitHub Pages. SSR features (like `useServerFn`) won't work.
-- TanStack Router handles all routing client-side.
-- The `404.html` fallback ensures direct URL access (e.g., `/some-page`) works with SPA routing.
+- This is a pure SPA — all rendering happens client-side
+- The `404.html` fallback ensures direct URL access works with client-side routing
+- React 19 + Vite 8 + Tailwind CSS v4

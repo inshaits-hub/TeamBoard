@@ -1,29 +1,23 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
+
+const distDir = join(process.cwd(), "dist");
+const assetsDir = join(distDir, "assets");
 
 const buildResult = spawnSync("npx", ["vite", "build"], {
   stdio: "inherit",
-  shell: true,
+  shell: false,
 });
 
-const publicDir = join(process.cwd(), ".output", "public");
-const assetsExist = existsSync(join(publicDir, "assets"));
-
-if (!assetsExist) {
-  console.error("Client build did not produce .output/public/assets — aborting.");
+if (!existsSync(assetsDir)) {
+  console.error("Build did not produce dist/assets — aborting.");
   process.exit(1);
 }
 
 if (buildResult.status !== 0) {
-  console.warn(
-    "\nNote: vite build reported an error in the SSR step. This is expected and safe to ignore for this deployment — only the client build output is used.\n"
-  );
+  process.exit(buildResult.status);
 }
 
-const shellResult = spawnSync("node", ["scripts/generate-shell.mjs"], {
-  stdio: "inherit",
-  shell: true,
-});
-
-process.exit(shellResult.status ?? 0);
+copyFileSync(join(distDir, "index.html"), join(distDir, "404.html"));
+console.log("Copied index.html to 404.html for SPA routing fallback");
