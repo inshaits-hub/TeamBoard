@@ -79,20 +79,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Team Task Board" },
-      { name: "description", content: "A pastel-themed team task board with glass UI." },
-      { name: "author", content: "Team" },
-      { property: "og:title", content: "Team Task Board" },
-      { property: "og:description", content: "A pastel-themed team task board with glass UI." },
+      { title: "Task Board" },
+      { name: "description", content: "A responsive task board for managing projects." },
+      { name: "author", content: "Lovable" },
+      { property: "og:title", content: "Task Board" },
+      { property: "og:description", content: "A responsive task board for managing projects." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
@@ -103,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         <HeadContent />
       </head>
@@ -122,7 +123,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <NotificationProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </NotificationProvider>
       </ThemeProvider>

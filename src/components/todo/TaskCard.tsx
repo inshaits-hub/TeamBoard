@@ -1,28 +1,32 @@
-import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  MessageSquare,
-  Paperclip,
-  MoreHorizontal,
-  GripVertical,
-  Check,
-  X,
-} from "lucide-react";
+import { MessageSquare, Paperclip, MoreHorizontal, GripVertical } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Task } from "./types";
-import { LABELS, PRIORITIES } from "./types";
+import { COLUMNS, LABELS, PRIORITIES } from "./types";
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
   isOverlay?: boolean;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
+export function TaskCard({
+  task,
+  onEdit,
+  onDelete,
+  isOverlay,
+  selectionMode = false,
+  selected = false,
+  onToggleSelect,
+}: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -30,244 +34,91 @@ export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id, disabled: false });
+  } = useSortable({ id: task.id, disabled: selectionMode || isOverlay });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(task);
-
   const label = LABELS[task.label];
   const priority = PRIORITIES[task.priority];
-  const isPaused = task.column === "paused";
-  const isDone = task.column === "done";
+  const columnTitle = COLUMNS.find((c) => c.id === task.column)?.title ?? task.column;
 
-  const startEditing = () => {
-    setDraft(task);
-    setIsEditing(true);
-  };
-
-  const cancelEditing = () => {
-    setDraft(task);
-    setIsEditing(false);
-  };
-
-  const saveEditing = () => {
-    onEdit(draft);
-    setIsEditing(false);
-  };
-
-  // While editing, don't wire up drag listeners — otherwise clicking into
-  // an input or select on the card starts a drag instead of focusing it.
-  const dragProps = isEditing ? {} : { ...attributes, ...listeners };
-
-  if (isEditing) {
-    return (
-      <div
-        ref={setNodeRef}
-        data-lovable-todo-card={task.id}
-        style={style}
-        className="
-          relative rounded-2xl border p-4 shadow-md
-          border-app-primary/40 bg-app-card
-        "
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Editing task
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              onClick={cancelEditing}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-app-primary hover:text-app-primary"
-              onClick={saveEditing}
-            >
-              <Check className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        <input
-          value={draft.title}
-          onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-          placeholder="Task title"
-          className="
-            mt-3 w-full rounded-lg border border-app-primary/30 bg-app-bg
-            px-2.5 py-1.5 text-sm font-semibold text-app-card-foreground
-            outline-none focus:border-app-primary
-          "
-        />
-
-        <textarea
-          value={draft.description}
-          onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-          placeholder="Description"
-          rows={2}
-          className="
-            mt-2 w-full resize-none rounded-lg border border-app-primary/30
-            bg-app-bg px-2.5 py-1.5 text-xs text-app-card-foreground
-            outline-none focus:border-app-primary
-          "
-        />
-
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <select
-            value={draft.label}
-            onChange={(e) =>
-              setDraft({ ...draft, label: e.target.value as Task["label"] })
-            }
-            className="
-              rounded-lg border border-app-primary/30 bg-app-bg px-2 py-1.5
-              text-xs text-app-card-foreground outline-none focus:border-app-primary
-            "
-          >
-            {Object.entries(LABELS).map(([key, value]) => (
-              <option key={key} value={key}>
-                {value.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={draft.priority}
-            onChange={(e) =>
-              setDraft({ ...draft, priority: e.target.value as Task["priority"] })
-            }
-            className="
-              rounded-lg border border-app-primary/30 bg-app-bg px-2 py-1.5
-              text-xs text-app-card-foreground outline-none focus:border-app-primary
-            "
-          >
-            {Object.entries(PRIORITIES).map(([key, value]) => (
-              <option key={key} value={key}>
-                {value.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <input
-            value={draft.dueDate}
-            onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
-            placeholder="Due date"
-            className="
-              rounded-lg border border-app-primary/30 bg-app-bg px-2 py-1.5
-              text-xs text-app-card-foreground outline-none focus:border-app-primary
-            "
-          />
-          <input
-            value={draft.assignee}
-            onChange={(e) => setDraft({ ...draft, assignee: e.target.value })}
-            placeholder="Assignee"
-            className="
-              rounded-lg border border-app-primary/30 bg-app-bg px-2 py-1.5
-              text-xs text-app-card-foreground outline-none focus:border-app-primary
-            "
-          />
-        </div>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 flex-1 rounded-lg text-xs text-muted-foreground hover:text-foreground"
-            onClick={cancelEditing}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            className="h-8 flex-1 rounded-lg bg-app-primary text-xs font-semibold text-app-primary-foreground hover:opacity-90"
-            onClick={saveEditing}
-          >
-            Save
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const dragProps = selectionMode || isOverlay ? {} : { ...attributes, ...listeners };
 
   return (
     <div
       ref={setNodeRef}
       data-lovable-todo-card={task.id}
+      data-task-card={task.id}
+      data-column={task.column}
       style={style}
+      tabIndex={isOverlay ? -1 : 0}
+      role="button"
+      aria-roledescription="Draggable task"
+      aria-pressed={selectionMode ? selected : undefined}
+      aria-label={`${task.title}. ${label.name}, ${priority.name} priority, ${columnTitle}${
+        task.dueDate ? `, due ${task.dueDate}` : ""
+      }. Press Enter to edit.`}
       className={`
-        group relative cursor-grab rounded-2xl border p-4 shadow-sm transition-all
-        hover:shadow-md active:cursor-grabbing
+        group relative rounded-2xl border bg-app-card p-4 shadow-sm transition-all
+        hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-primary focus-visible:ring-offset-2
+        ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
+        ${selected ? "border-app-primary ring-1 ring-app-primary" : "border-border/50"}
         ${isDragging ? "opacity-30" : "opacity-100"}
         ${isOverlay ? "rotate-2 shadow-lg" : ""}
-        ${
-          isPaused
-            ? "border-dashed border-[#8C9B5C]/40 bg-[#B7C9AA]/25 opacity-70 dark:bg-[#3D5A33]/15 dark:border-[#8C9B5C]/20"
-            : "border-[#8C9B5C]/30 bg-[#B7C9AA]/25 dark:bg-[#3D5A33]/15 dark:border-[#8C9B5C]/20"
-        }
       `}
+      onClick={() => {
+        if (selectionMode) onToggleSelect?.(task.id);
+      }}
       {...dragProps}
     >
       <div className="flex items-start justify-between gap-2">
-        <Badge
-          variant="secondary"
-          className={`${label.bg} ${label.text} rounded-full px-2.5 py-0.5 text-[10px] font-medium hover:${label.bg}`}
-        >
-          {label.name}
-        </Badge>
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="drag-handle h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={(e) => e.stopPropagation()}
+        <div className="flex items-center gap-2">
+          {selectionMode && (
+            <Checkbox
+              checked={selected}
+              onCheckedChange={() => onToggleSelect?.(task.id)}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Select task ${task.title}`}
+              tabIndex={-1}
+            />
+          )}
+          <Badge
+            variant="secondary"
+            className={`${label.bg} ${label.text} rounded-full px-2.5 py-0.5 text-[10px] font-medium hover:${label.bg}`}
           >
-            <GripVertical className="h-3.5 w-3.5" />
-          </Button>
+            {label.name}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+          {!selectionMode && (
+            <span
+              className="drag-handle grid h-6 w-6 place-items-center text-muted-foreground"
+              aria-hidden="true"
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </span>
+          )}
           <Button
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            aria-label={`Edit task ${task.title}`}
             onClick={(e) => {
               e.stopPropagation();
-              startEditing();
+              onEdit(task);
             }}
+            onPointerDown={(e) => e.stopPropagation()}
           >
-            <MoreHorizontal className="h-3.5 w-3.5" />
+            <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
       </div>
 
-      <h3
-        className={`mt-3 text-sm font-semibold leading-snug line-clamp-2 cursor-pointer ${
-          isDone
-            ? "text-muted-foreground line-through"
-            : isPaused
-              ? "text-[#8B5A2B] dark:text-[#C9A227]"
-              : "text-app-card-foreground"
-        }`}
-        onClick={(e) => {
-          e.stopPropagation();
-          startEditing();
-        }}
-      >
+      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug text-app-card-foreground">
         {task.title}
-        {isPaused && (
-          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[#C9A227]/25 px-2 py-0.5 text-[9px] font-medium text-[#8B5A2B] dark:bg-[#8B5A2B]/30 dark:text-[#C9A227]">
-            Paused
-          </span>
-        )}
       </h3>
       <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
         {task.description}
@@ -276,26 +127,31 @@ export function TaskCard({ task, onEdit, onDelete, isOverlay }: TaskCardProps) {
       <div className="mt-4 flex items-center justify-between">
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <MessageSquare className="h-3.5 w-3.5" />
+            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="sr-only">Comments:</span>
             {task.comments}
           </span>
           <span className="flex items-center gap-1">
-            <Paperclip className="h-3.5 w-3.5" />
+            <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="sr-only">Attachments:</span>
             {task.attachments}
           </span>
         </div>
         <Avatar className="h-6 w-6 text-[10px]">
-          <AvatarFallback className="bg-[#3D5A33] text-white">
+          <AvatarFallback
+            className="bg-app-primary text-app-primary-foreground"
+            aria-label={`Assigned to ${task.assignee}`}
+          >
             {task.assignee}
           </AvatarFallback>
         </Avatar>
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+      <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-3">
         <span className="text-[10px] text-muted-foreground">{task.dueDate}</span>
         <Badge
           variant="secondary"
-          className={`${priority.color} rounded-full px-2 py-0 text-[10px] font-medium border-0`}
+          className={`${priority.color} rounded-full border-0 px-2 py-0 text-[10px] font-medium`}
         >
           {priority.name}
         </Badge>

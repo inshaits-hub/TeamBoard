@@ -69,12 +69,10 @@ export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-3xl border border-[#C6C7A5] bg-[#F8F3E6] shadow-2xl">
+      <DialogContent className="sm:max-w-md rounded-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-             <DialogTitle className="text-2xl font-bold text-[#465E20]">
-                    {task ? "Edit Task" : "Create New Task"}
-</DialogTitle>
+            <DialogTitle>{task ? "Edit Task" : "Create New Task"}</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -182,7 +180,7 @@ export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-xl bg-[#5E7330] text-[#F8F3E6] font-semibold shadow-lg transition-all duration-300 hover:bg-[#465E20] hover:shadow-xl focus-visible:ring-2 focus-visible:ring-[#C9A24A] active:bg-[#3B4F1A]">
+            <Button type="submit" className="rounded-xl bg-app-primary hover:bg-app-primary/90">
               {task ? "Save Changes" : "Create Task"}
             </Button>
           </DialogFooter>
