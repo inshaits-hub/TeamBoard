@@ -7,6 +7,7 @@ export const getRouter = () => {
 
   const router = createRouter({
     routeTree,
+    basepath: import.meta.env.DEV ? undefined : "/TeamBoard",
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
