@@ -186,7 +186,6 @@ export function TaskEditModal({ task, onClose, onSave }: TaskEditModalProps) {
                   setDraft({ ...draft, assignee: e.target.value })
                 }
                 className="
-                  w-full
                   h-10 rounded-xl border border-app-primary/30 bg-app-bg px-3
                   text-sm text-app-card-foreground outline-none
                   focus:border-app-primary
