@@ -56,3 +56,5 @@ npx serve dist
 - This is a pure SPA — all rendering happens client-side
 - The `404.html` fallback ensures direct URL access works with client-side routing
 - React 19 + Vite 8 + Tailwind CSS v4
+
+
