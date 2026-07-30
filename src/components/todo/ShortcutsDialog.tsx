@@ -13,7 +13,7 @@ const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: "?", action: "Show this shortcuts list" },
   { keys: "Tab", action: "Move between controls and task cards" },
   { keys: "Arrow keys", action: "Move focus between cards and columns" },
-  { keys: "Enter", action: "Edit the focused task" },
+  { keys: "Enter", action: "Preview the focused task (then E edit, C complete, Del delete)" },
   { keys: "Space", action: "Select the focused task (selection mode)" },
   { keys: "Delete", action: "Delete the focused task" },
   { keys: "Escape", action: "Clear selection or close a dialog" },

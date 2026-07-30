@@ -11,12 +11,14 @@ import { MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Task, ColumnId } from "./types";
 import { COLUMNS, LABELS, PRIORITIES } from "./types";
+import { DUE_TONE_CLASS, getDueMeta } from "./dueDate";
 
 interface ListViewProps {
   tasks: Task[];
   onUpdateTask: (task: Task) => void;
   onDeleteTask: (id: string) => void;
   onEditTask: (task: Task) => void;
+  onOpenTask: (task: Task) => void;
   selectionMode: boolean;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
@@ -29,6 +31,7 @@ export function ListView({
   onUpdateTask,
   onDeleteTask,
   onEditTask,
+  onOpenTask,
   selectionMode,
   selectedIds,
   onToggleSelect,
@@ -116,18 +119,25 @@ export function ListView({
                 </td>
 
                 <th scope="row" className="min-w-0 px-2 py-3 font-normal">
-                  <p
-                    className={`truncate text-sm font-medium ${
-                      task.column === "done"
-                        ? "text-muted-foreground line-through"
-                        : "text-app-card-foreground"
-                    }`}
+                  <button
+                    type="button"
+                    onClick={() => onOpenTask(task)}
+                    className="block w-full min-w-0 rounded-lg text-left transition-colors hover:text-app-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-primary focus-visible:ring-offset-2"
+                    aria-label={`Preview task ${task.title}`}
                   >
-                    {task.title}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {task.description}
-                  </p>
+                    <span
+                      className={`block truncate text-sm font-medium ${
+                        task.column === "done"
+                          ? "text-muted-foreground line-through"
+                          : "text-app-card-foreground"
+                      }`}
+                    >
+                      {task.title}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {task.description}
+                    </span>
+                  </button>
                 </th>
 
                 <td className="hidden px-2 py-3 sm:table-cell">
@@ -148,9 +158,17 @@ export function ListView({
                   </Badge>
                 </td>
 
-                <td className="hidden px-2 py-3 text-xs text-muted-foreground sm:table-cell">
-                  {task.dueDate}
+                <td className="hidden px-2 py-3 sm:table-cell">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      DUE_TONE_CLASS[getDueMeta(task).tone]
+                    }`}
+                    title={getDueMeta(task).full}
+                  >
+                    {getDueMeta(task).label}
+                  </span>
                 </td>
+
 
                 <td className="px-2 py-3">
                   <Select

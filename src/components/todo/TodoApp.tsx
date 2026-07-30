@@ -6,12 +6,14 @@ import { BoardView } from "./BoardView";
 import { ListView } from "./ListView";
 import { Sidebar } from "./Sidebar";
 import { TaskForm } from "./TaskForm";
+import { TaskPreviewSheet } from "./TaskPreviewSheet";
 import { BulkActionBar } from "./BulkActionBar";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { LiveRegion } from "./LiveRegion";
 import { SignOutDialog } from "./SignOutDialog";
-import { useTaskStore } from "./useTaskStore";
+import { useTaskStore, type RemovedTask } from "./useTaskStore";
 import { downloadTasks, mergeTasks, parseTasksFile } from "./taskIO";
+import { matchesDueFilter, sortTasks, type DueFilter, type SortMode } from "./dueDate";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   notifyTaskCreated,
@@ -20,6 +22,9 @@ import {
   useDeadlineChecker,
 } from "./NotificationProvider";
 import type { ColumnId, LabelType, Priority, Task } from "./types";
+
+/** How long an undo toast stays actionable, in milliseconds. */
+const UNDO_TIMEOUT = 6000;
 
 export function TodoApp() {
   const {
@@ -30,6 +35,7 @@ export function TodoApp() {
     saveTask,
     deleteTask,
     deleteTasks,
+    restoreTasks,
     setColumnForTasks,
     setPriorityForTasks,
   } = useTaskStore();
@@ -38,9 +44,12 @@ export function TodoApp() {
 
   const [search, setSearch] = useState("");
   const [labelFilter, setLabelFilter] = useState<LabelType | "all">("all");
+  const [dueFilter, setDueFilter] = useState<DueFilter>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("manual");
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultColumn, setDefaultColumn] = useState<ColumnId | undefined>();
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -57,16 +66,23 @@ export function TodoApp() {
     window.setTimeout(() => setAnnouncement(message), 50);
   }, []);
 
+  const previewTask = useMemo(
+    () => tasks.find((t) => t.id === previewId) ?? null,
+    [tasks, previewId]
+  );
+
+
   const filteredTasks = useMemo(() => {
     const q = search.toLowerCase();
-    return tasks.filter((task) => {
+    const matched = tasks.filter((task) => {
       const matchesSearch =
         task.title.toLowerCase().includes(q) ||
         task.description.toLowerCase().includes(q);
       const matchesLabel = labelFilter === "all" || task.label === labelFilter;
-      return matchesSearch && matchesLabel;
+      return matchesSearch && matchesLabel && matchesDueFilter(task, dueFilter);
     });
-  }, [tasks, search, labelFilter]);
+    return sortTasks(matched, sortMode);
+  }, [tasks, search, labelFilter, dueFilter, sortMode]);
 
   const handleAddTask = useCallback((column?: ColumnId) => {
     setEditingTask(null);
@@ -75,24 +91,75 @@ export function TodoApp() {
   }, []);
 
   const handleEditTask = useCallback((task: Task) => {
+    setPreviewId(null);
     setEditingTask(task);
     setDefaultColumn(undefined);
     setFormOpen(true);
   }, []);
 
+  const handleOpenTask = useCallback((task: Task) => {
+    setPreviewId(task.id);
+  }, []);
+
+  /** Shows an undo toast that restores the removed tasks in place. */
+  const offerUndo = useCallback(
+    (removed: RemovedTask[], message: string) => {
+      if (removed.length === 0) return;
+      toast.success(message, {
+        duration: UNDO_TIMEOUT,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            restoreTasks(removed);
+            toast.success(
+              removed.length === 1
+                ? "Task restored"
+                : `${removed.length} tasks restored`
+            );
+            announce(
+              removed.length === 1
+                ? "Task restored."
+                : `${removed.length} tasks restored.`
+            );
+          },
+        },
+      });
+    },
+    [restoreTasks, announce]
+  );
+
   const handleDeleteTask = useCallback(
     (id: string) => {
       const deleted = tasks.find((t) => t.id === id);
-      deleteTask(id);
+      const removed = deleteTask(id);
       if (deleted) notifyTaskDeleted(deleted.title);
+      setPreviewId((prev) => (prev === id ? null : prev));
       setSelectedIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
+      offerUndo(removed, `"${deleted?.title ?? "Task"}" deleted`);
+      announce(`${deleted?.title ?? "Task"} deleted. Undo available.`);
     },
-    [deleteTask, tasks]
+    [deleteTask, tasks, offerUndo, announce]
   );
+
+  const handleToggleComplete = useCallback(
+    (task: Task) => {
+      const nextColumn: ColumnId = task.column === "done" ? "todo" : "done";
+      saveTask({ ...task, column: nextColumn });
+      toast.success(
+        nextColumn === "done" ? "Task completed" : "Task reopened"
+      );
+      announce(
+        `${task.title} marked ${nextColumn === "done" ? "complete" : "not complete"}.`
+      );
+      setPreviewId(null);
+    },
+    [saveTask, announce]
+  );
+
 
   const handleSignOut = useCallback(() => {
     setSignOutOpen(false);
@@ -151,9 +218,10 @@ export function TodoApp() {
   };
 
   const bulkDelete = () => {
-    deleteTasks(selectedList);
-    toast.success(`${selectedList.length} tasks deleted`);
-    announce(`${selectedList.length} tasks deleted.`);
+    const count = selectedList.length;
+    const removed = deleteTasks(selectedList);
+    offerUndo(removed, `${count} tasks deleted`);
+    announce(`${count} tasks deleted. Undo available.`);
     clearSelection();
   };
 
@@ -246,6 +314,10 @@ export function TodoApp() {
                 onSearchChange={setSearch}
                 labelFilter={labelFilter}
                 onLabelFilterChange={setLabelFilter}
+                dueFilter={dueFilter}
+                onDueFilterChange={setDueFilter}
+                sortMode={sortMode}
+                onSortModeChange={setSortMode}
                 resultCount={filteredTasks.length}
               />
             </div>
@@ -260,6 +332,7 @@ export function TodoApp() {
                   onDeleteTask={handleDeleteTask}
                   onAddTask={handleAddTask}
                   onEditTask={handleEditTask}
+                  onOpenTask={handleOpenTask}
                   selectionMode={selectionMode}
                   selectedIds={selectedIds}
                   onToggleSelect={toggleSelect}
@@ -271,6 +344,7 @@ export function TodoApp() {
                   onUpdateTask={saveTask}
                   onDeleteTask={handleDeleteTask}
                   onEditTask={handleEditTask}
+                  onOpenTask={handleOpenTask}
                   selectionMode={selectionMode}
                   selectedIds={selectedIds}
                   onToggleSelect={toggleSelect}
@@ -327,6 +401,17 @@ export function TodoApp() {
           }
           announce(`${task.title} saved.`);
         }}
+      />
+
+      <TaskPreviewSheet
+        task={previewTask}
+        open={previewTask !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewId(null);
+        }}
+        onEdit={handleEditTask}
+        onToggleComplete={handleToggleComplete}
+        onDelete={(task) => handleDeleteTask(task.id)}
       />
 
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />

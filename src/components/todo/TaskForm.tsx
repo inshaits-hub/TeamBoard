@@ -17,6 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { parseDue, toISODate } from "./dueDate";
 import type { Task, ColumnId, Priority, LabelType } from "./types";
 import { COLUMNS, LABELS, PRIORITIES } from "./types";
 
@@ -33,7 +42,7 @@ const DEFAULT_TASK: Omit<Task, "id" | "createdAt"> = {
   column: "todo",
   priority: "medium",
   label: "design",
-  dueDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+  dueDate: toISODate(new Date()),
   assignee: "Me",
   comments: 0,
   attachments: 0,
@@ -66,6 +75,8 @@ export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
   const update = <K extends keyof typeof form>(key: K, value: typeof form[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
+
+  const selectedDue = parseDue(form.dueDate);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -160,13 +171,49 @@ export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
 
               <div className="grid gap-2">
                 <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  value={form.dueDate}
-                  onChange={(e) => update("dueDate", e.target.value)}
-                  placeholder="Nov 24"
-                  className="rounded-xl"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="dueDate"
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "justify-start rounded-xl text-left font-normal",
+                        !selectedDue && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+                      {selectedDue
+                        ? selectedDue.toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDue ?? undefined}
+                      onSelect={(date) =>
+                        update("dueDate", date ? toISODate(date) : "")
+                      }
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                    <div className="border-t border-border/50 p-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full rounded-lg text-xs"
+                        onClick={() => update("dueDate", "")}
+                      >
+                        Clear due date
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>

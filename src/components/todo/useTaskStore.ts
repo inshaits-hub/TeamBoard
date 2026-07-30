@@ -8,6 +8,12 @@ export const VIEW_STORAGE_KEY = "taskboard.view.v1";
 
 export type ViewMode = "board" | "list";
 
+/** A task removed by a delete, with the position it should return to. */
+export interface RemovedTask {
+  index: number;
+  task: Task;
+}
+
 function isValidTask(value: unknown): value is Task {
   if (!value || typeof value !== "object") return false;
   const t = value as Record<string, unknown>;
@@ -94,13 +100,43 @@ export function useTaskStore() {
     );
   }, []);
 
-  const deleteTask = useCallback((id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  /** Removes tasks and returns their snapshots so a delete can be undone. */
+  const removeTasks = useCallback(
+    (ids: string[]): RemovedTask[] => {
+      const set = new Set(ids);
+      const removed: RemovedTask[] = [];
+      tasks.forEach((task, index) => {
+        if (set.has(task.id)) removed.push({ index, task });
+      });
+      setTasks((prev) => prev.filter((t) => !set.has(t.id)));
+      return removed;
+    },
+    [tasks]
+  );
 
-  const deleteTasks = useCallback((ids: string[]) => {
-    const set = new Set(ids);
-    setTasks((prev) => prev.filter((t) => !set.has(t.id)));
+  const deleteTask = useCallback(
+    (id: string) => removeTasks([id]),
+    [removeTasks]
+  );
+
+  const deleteTasks = useCallback(
+    (ids: string[]) => removeTasks(ids),
+    [removeTasks]
+  );
+
+  /** Re-inserts previously removed tasks at their original positions. */
+  const restoreTasks = useCallback((entries: RemovedTask[]) => {
+    if (entries.length === 0) return;
+    setTasks((prev) => {
+      const next = [...prev];
+      [...entries]
+        .sort((a, b) => a.index - b.index)
+        .forEach(({ index, task }) => {
+          if (next.some((t) => t.id === task.id)) return;
+          next.splice(Math.min(index, next.length), 0, task);
+        });
+      return next;
+    });
   }, []);
 
   const setColumnForTasks = useCallback((ids: string[], column: ColumnId) => {
@@ -128,6 +164,7 @@ export function useTaskStore() {
     saveTask,
     deleteTask,
     deleteTasks,
+    restoreTasks,
     setColumnForTasks,
     setPriorityForTasks,
     resetTasks,

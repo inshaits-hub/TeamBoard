@@ -1,17 +1,19 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MessageSquare, Paperclip, MoreHorizontal, GripVertical } from "lucide-react";
+import { MessageSquare, Paperclip, MoreHorizontal, GripVertical, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Task } from "./types";
 import { COLUMNS, LABELS, PRIORITIES } from "./types";
+import { DUE_TONE_CLASS, getDueMeta } from "./dueDate";
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  onOpen?: (task: Task) => void;
   isOverlay?: boolean;
   selectionMode?: boolean;
   selected?: boolean;
@@ -22,6 +24,7 @@ export function TaskCard({
   task,
   onEdit,
   onDelete,
+  onOpen,
   isOverlay,
   selectionMode = false,
   selected = false,
@@ -44,6 +47,7 @@ export function TaskCard({
   const label = LABELS[task.label];
   const priority = PRIORITIES[task.priority];
   const columnTitle = COLUMNS.find((c) => c.id === task.column)?.title ?? task.column;
+  const due = getDueMeta(task);
 
   const dragProps = selectionMode || isOverlay ? {} : { ...attributes, ...listeners };
 
@@ -58,22 +62,32 @@ export function TaskCard({
       role="button"
       aria-roledescription="Draggable task"
       aria-pressed={selectionMode ? selected : undefined}
-      aria-label={`${task.title}. ${label.name}, ${priority.name} priority, ${columnTitle}${
-        task.dueDate ? `, due ${task.dueDate}` : ""
-      }. Press Enter to edit.`}
+      aria-label={`${task.title}. ${label.name}, ${priority.name} priority, ${columnTitle}, ${due.label}. Press Enter to preview.`}
       className={`
-        group relative rounded-2xl border bg-app-card p-4 shadow-sm transition-all
-        hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-primary focus-visible:ring-offset-2
+        group relative overflow-hidden rounded-2xl border bg-app-card p-4 shadow-sm transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-primary focus-visible:ring-offset-2
         ${selectionMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}
         ${selected ? "border-app-primary ring-1 ring-app-primary" : "border-border/50"}
         ${isDragging ? "opacity-30" : "opacity-100"}
-        ${isOverlay ? "rotate-2 shadow-lg" : ""}
+        ${isOverlay ? "rotate-2 shadow-2xl" : ""}
       `}
       onClick={() => {
         if (selectionMode) onToggleSelect?.(task.id);
+        else onOpen?.(task);
       }}
       {...dragProps}
     >
+      <span
+        aria-hidden="true"
+        className={`absolute inset-y-0 left-0 w-1 ${
+          due.tone === "overdue"
+            ? "bg-destructive/70"
+            : due.tone === "soon"
+              ? "bg-amber-400"
+              : "bg-app-primary/30"
+        } opacity-0 transition-opacity group-hover:opacity-100`}
+      />
+
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           {selectionMode && (
@@ -147,8 +161,14 @@ export function TaskCard({
         </Avatar>
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-3">
-        <span className="text-[10px] text-muted-foreground">{task.dueDate}</span>
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/30 pt-3">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${DUE_TONE_CLASS[due.tone]}`}
+          title={due.full}
+        >
+          <CalendarDays className="h-3 w-3" aria-hidden="true" />
+          {due.label}
+        </span>
         <Badge
           variant="secondary"
           className={`${priority.color} rounded-full border-0 px-2 py-0 text-[10px] font-medium`}

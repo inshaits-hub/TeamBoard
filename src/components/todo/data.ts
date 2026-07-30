@@ -1,5 +1,14 @@
 import type { Task } from "./types";
 
+/** Returns an ISO `yyyy-mm-dd` date offset by `days` from today. */
+function day(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const dd = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${dd}`;
+}
+
 export const INITIAL_TASKS: Task[] = [
   {
     id: "t1",
@@ -8,7 +17,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "todo",
     priority: "medium",
     label: "copywriting",
-    dueDate: "Nov 24",
+    dueDate: day(-3),
     assignee: "A",
     comments: 2,
     attachments: 1,
@@ -21,7 +30,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "in-progress",
     priority: "high",
     label: "illustration",
-    dueDate: "Nov 24",
+    dueDate: day(-1),
     assignee: "B",
     comments: 3,
     attachments: 2,
@@ -34,7 +43,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "review",
     priority: "medium",
     label: "design",
-    dueDate: "Nov 24",
+    dueDate: day(0),
     assignee: "C",
     comments: 2,
     attachments: 1,
@@ -47,7 +56,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "done",
     priority: "low",
     label: "illustration",
-    dueDate: "Nov 24",
+    dueDate: day(1),
     assignee: "D",
     comments: 5,
     attachments: 3,
@@ -60,7 +69,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "todo",
     priority: "low",
     label: "design",
-    dueDate: "Nov 24",
+    dueDate: day(2),
     assignee: "E",
     comments: 1,
     attachments: 0,
@@ -73,7 +82,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "in-progress",
     priority: "medium",
     label: "copywriting",
-    dueDate: "Nov 24",
+    dueDate: day(4),
     assignee: "F",
     comments: 2,
     attachments: 1,
@@ -86,7 +95,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "review",
     priority: "high",
     label: "copywriting",
-    dueDate: "Nov 24",
+    dueDate: day(7),
     assignee: "G",
     comments: 4,
     attachments: 2,
@@ -99,7 +108,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "done",
     priority: "medium",
     label: "design",
-    dueDate: "Nov 24",
+    dueDate: day(10),
     assignee: "H",
     comments: 2,
     attachments: 1,
@@ -112,7 +121,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "todo",
     priority: "high",
     label: "research",
-    dueDate: "Nov 25",
+    dueDate: day(0),
     assignee: "I",
     comments: 3,
     attachments: 4,
@@ -125,7 +134,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "in-progress",
     priority: "medium",
     label: "copywriting",
-    dueDate: "Nov 25",
+    dueDate: day(3),
     assignee: "J",
     comments: 1,
     attachments: 0,
@@ -138,7 +147,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "review",
     priority: "low",
     label: "design",
-    dueDate: "Nov 25",
+    dueDate: day(-2),
     assignee: "K",
     comments: 2,
     attachments: 2,
@@ -151,7 +160,7 @@ export const INITIAL_TASKS: Task[] = [
     column: "done",
     priority: "high",
     label: "illustration",
-    dueDate: "Nov 25",
+    dueDate: day(5),
     assignee: "L",
     comments: 6,
     attachments: 5,

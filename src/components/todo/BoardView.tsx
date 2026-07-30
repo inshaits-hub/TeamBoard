@@ -28,6 +28,7 @@ interface BoardViewProps {
   onDeleteTask: (id: string) => void;
   onAddTask: (column?: ColumnId) => void;
   onEditTask: (task: Task) => void;
+  onOpenTask: (task: Task) => void;
   selectionMode: boolean;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
@@ -73,6 +74,7 @@ export function BoardView({
   onDeleteTask,
   onAddTask,
   onEditTask,
+  onOpenTask,
   selectionMode,
   selectedIds,
   onToggleSelect,
@@ -174,7 +176,7 @@ export function BoardView({
       }
       case "Enter": {
         event.preventDefault();
-        onEditTask(task);
+        onOpenTask(task);
         break;
       }
       case " ": {
@@ -265,6 +267,7 @@ export function BoardView({
                     key={task.id}
                     task={task}
                     onEdit={onEditTask}
+                    onOpen={onOpenTask}
                     onDelete={onDeleteTask}
                     selectionMode={selectionMode}
                     selected={selectedIds.has(task.id)}
