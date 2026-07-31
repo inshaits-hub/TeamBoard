@@ -33,6 +33,9 @@ interface BoardViewProps {
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onAnnounce: (message: string) => void;
+  /** Manual reordering only applies while the board is in manual sort. */
+  reorderable: boolean;
+  onReorder: (activeId: string, overId: string) => void;
 }
 
 function DroppableColumn({
@@ -79,6 +82,8 @@ export function BoardView({
   selectedIds,
   onToggleSelect,
   onAnnounce,
+  reorderable,
+  onReorder,
 }: BoardViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -126,7 +131,21 @@ export function BoardView({
     }
   };
 
-  const handleDragEnd = (_event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    const overId = over ? String(over.id) : null;
+    const activeTaskId = String(active.id);
+
+    // Dropping onto another card persists the manual ordering for the board.
+    if (
+      reorderable &&
+      overId &&
+      overId !== activeTaskId &&
+      tasks.some((t) => t.id === overId)
+    ) {
+      onReorder(activeTaskId, overId);
+    }
+
     const moved = activeId ? tasks.find((t) => t.id === activeId) : null;
     if (moved) {
       const columnTitle = COLUMNS.find((c) => c.id === moved.column)?.title;

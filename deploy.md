@@ -58,3 +58,22 @@ npx serve dist
 - React 19 + Vite 8 + Tailwind CSS v4
 
 
+
+## Backend (Render / Railway) + frontend wiring
+
+The API lives in `backend/` (Express + MongoDB).
+
+1. Create a MongoDB Atlas cluster and copy its connection string.
+2. Deploy `backend/` (Render blueprint provided in `backend/render.yaml`):
+   - Build: `npm install && npm run build`, Start: `npm start`
+   - Health check: `/api/health`
+   - Env vars: `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN`
+     (`CLIENT_ORIGIN` is a comma separated list, e.g.
+     `http://localhost:5173,https://<username>.github.io`)
+3. In the GitHub repo, add a **repository secret** `VITE_API_URL` pointing at
+   the deployed API, e.g. `https://teamboard-api.onrender.com/api`.
+   The Pages workflow injects it at build time.
+4. Without `VITE_API_URL` the app still runs, but in offline mode: auth and
+   tasks stay in the browser's localStorage.
+
+See `.env.example` (frontend) and `backend/.env.example` for the full list.

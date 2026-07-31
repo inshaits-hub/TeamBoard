@@ -1,17 +1,19 @@
 import dns from 'dns';
-dns.setServers(['8.8.8.8', '8.8.4.4']);
 import mongoose from 'mongoose';
+import { env } from './env';
 
 const connectDB = async (): Promise<void> => {
-  try {
-    const uri = process.env.MONGO_URI;
-    if (!uri) throw new Error('MONGO_URI is not set in .env');
-    await mongoose.connect(uri);
-    console.log('MongoDB connected');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
+  const { mongoUri, customDnsServers } = env();
+
+  // Some hosts (and some ISPs) cannot resolve SRV records for MongoDB Atlas.
+  // Overriding DNS is opt-in via DNS_SERVERS instead of hardcoded.
+  if (customDnsServers.length > 0) {
+    dns.setServers(customDnsServers);
   }
+
+  mongoose.set('strictQuery', true);
+  await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 15000 });
+  console.log('MongoDB connected');
 };
 
 export default connectDB;

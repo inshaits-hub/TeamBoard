@@ -1,11 +1,22 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import app from './app';
+import { env } from './config/env';
 import connectDB from './config/database';
 
-const PORT = process.env.PORT || 5000;
+const start = async () => {
+  const { port } = env();
+  await connectDB();
 
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  // Lazy import so env validation runs before any route module loads.
+  const { default: app } = await import('./app');
+
+  app.listen(port, '0.0.0.0', () =>
+    console.log(`Server running on port ${port}`)
+  );
+};
+
+start().catch((err) => {
+  console.error('Failed to start server:', err instanceof Error ? err.message : err);
+  process.exit(1);
 });

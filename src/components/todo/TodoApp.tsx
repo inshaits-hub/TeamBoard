@@ -4,6 +4,7 @@ import { Header } from "./Header";
 import { SearchFilter } from "./SearchFilter";
 import { BoardView } from "./BoardView";
 import { ListView } from "./ListView";
+import { CalendarView, type CalendarRange } from "./CalendarView";
 import { Sidebar } from "./Sidebar";
 import { TaskForm } from "./TaskForm";
 import { TaskPreviewSheet } from "./TaskPreviewSheet";
@@ -11,7 +12,11 @@ import { BulkActionBar } from "./BulkActionBar";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { LiveRegion } from "./LiveRegion";
 import { SignOutDialog } from "./SignOutDialog";
-import { useTaskStore, type RemovedTask } from "./useTaskStore";
+import {
+  applyOrder,
+  useTaskStore,
+  type RemovedTask,
+} from "./useTaskStore";
 import { downloadTasks, mergeTasks, parseTasksFile } from "./taskIO";
 import { matchesDueFilter, sortTasks, type DueFilter, type SortMode } from "./dueDate";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,9 +32,12 @@ import type { ColumnId, LabelType, Priority, Task } from "./types";
 const UNDO_TIMEOUT = 6000;
 
 export function TodoApp() {
+  const { user, logout, token } = useAuth();
+
   const {
     tasks,
-    setTasks,
+    order,
+    online,
     view,
     setView,
     saveTask,
@@ -38,9 +46,9 @@ export function TodoApp() {
     restoreTasks,
     setColumnForTasks,
     setPriorityForTasks,
-  } = useTaskStore();
-
-  const { user, logout } = useAuth();
+    reorderTasks,
+    replaceAll,
+  } = useTaskStore(token);
 
   const [search, setSearch] = useState("");
   const [labelFilter, setLabelFilter] = useState<LabelType | "all">("all");
@@ -50,6 +58,7 @@ export function TodoApp() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultColumn, setDefaultColumn] = useState<ColumnId | undefined>();
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [calendarRange, setCalendarRange] = useState<CalendarRange | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -81,8 +90,37 @@ export function TodoApp() {
       const matchesLabel = labelFilter === "all" || task.label === labelFilter;
       return matchesSearch && matchesLabel && matchesDueFilter(task, dueFilter);
     });
-    return sortTasks(matched, sortMode);
-  }, [tasks, search, labelFilter, dueFilter, sortMode]);
+    return matched;
+  }, [tasks, search, labelFilter, dueFilter]);
+
+  /** Board and list each honour their own saved manual ordering. */
+  const boardTasks = useMemo(
+    () =>
+      sortMode === "manual"
+        ? applyOrder(filteredTasks, order.board)
+        : sortTasks(filteredTasks, sortMode),
+    [filteredTasks, order.board, sortMode]
+  );
+
+  const listTasks = useMemo(
+    () =>
+      sortMode === "manual"
+        ? applyOrder(filteredTasks, order.list)
+        : sortTasks(filteredTasks, sortMode),
+    [filteredTasks, order.list, sortMode]
+  );
+
+  /** Calendar day/week selection narrows the visible tasks further. */
+  const calendarTasks = useMemo(() => {
+    if (!calendarRange) return filteredTasks;
+    return filteredTasks.filter((task) => {
+      const iso = task.dueDate?.slice(0, 10);
+      return Boolean(iso) && iso >= calendarRange.start && iso <= calendarRange.end;
+    });
+  }, [filteredTasks, calendarRange]);
+
+  const visibleTasks =
+    view === "calendar" ? calendarTasks : view === "list" ? listTasks : boardTasks;
 
   const handleAddTask = useCallback((column?: ColumnId) => {
     setEditingTask(null);
@@ -178,11 +216,11 @@ export function TodoApp() {
 
   const toggleSelectAll = useCallback(() => {
     setSelectedIds((prev) =>
-      prev.size === filteredTasks.length
+      prev.size === visibleTasks.length
         ? new Set()
-        : new Set(filteredTasks.map((t) => t.id))
+        : new Set(visibleTasks.map((t) => t.id))
     );
-  }, [filteredTasks]);
+  }, [visibleTasks]);
 
   const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
@@ -239,7 +277,10 @@ export function TodoApp() {
       announce(`Import failed. ${result.error}`);
       return;
     }
-    setTasks((prev) => mergeTasks(prev, result.tasks));
+    replaceAll(mergeTasks(tasks, result.tasks), {
+      board: order.board,
+      list: order.list,
+    });
     const skipped = result.skipped
       ? ` ${result.skipped} entries were skipped.`
       : "";
@@ -302,6 +343,7 @@ export function TodoApp() {
         onShowShortcuts={() => setShortcutsOpen(true)}
         user={user}
         onSignOutClick={() => setSignOutOpen(true)}
+        online={online}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -318,7 +360,7 @@ export function TodoApp() {
                 onDueFilterChange={setDueFilter}
                 sortMode={sortMode}
                 onSortModeChange={setSortMode}
-                resultCount={filteredTasks.length}
+                resultCount={visibleTasks.length}
               />
             </div>
           </div>
@@ -327,7 +369,7 @@ export function TodoApp() {
             <div className="mx-auto max-w-[1600px]">
               {view === "board" ? (
                 <BoardView
-                  tasks={filteredTasks}
+                  tasks={boardTasks}
                   onUpdateTask={saveTask}
                   onDeleteTask={handleDeleteTask}
                   onAddTask={handleAddTask}
@@ -337,10 +379,12 @@ export function TodoApp() {
                   selectedIds={selectedIds}
                   onToggleSelect={toggleSelect}
                   onAnnounce={announce}
+                  reorderable={sortMode === "manual" && !selectionMode}
+                  onReorder={(a, b) => reorderTasks("board", a, b)}
                 />
-              ) : (
+              ) : view === "list" ? (
                 <ListView
-                  tasks={filteredTasks}
+                  tasks={listTasks}
                   onUpdateTask={saveTask}
                   onDeleteTask={handleDeleteTask}
                   onEditTask={handleEditTask}
@@ -349,6 +393,20 @@ export function TodoApp() {
                   selectedIds={selectedIds}
                   onToggleSelect={toggleSelect}
                   onToggleSelectAll={toggleSelectAll}
+                  onAnnounce={announce}
+                  reorderable={sortMode === "manual" && !selectionMode}
+                  onReorder={(a, b) => reorderTasks("list", a, b)}
+                />
+              ) : (
+                <CalendarView
+                  tasks={filteredTasks}
+                  selection={calendarRange}
+                  onSelectionChange={setCalendarRange}
+                  onOpenTask={handleOpenTask}
+                  onAddTask={() => handleAddTask()}
+                  onRescheduleTask={(task, dueDate) =>
+                    saveTask({ ...task, dueDate })
+                  }
                   onAnnounce={announce}
                 />
               )}

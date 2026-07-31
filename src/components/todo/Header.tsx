@@ -1,5 +1,7 @@
 import {
+  CalendarDays,
   CheckSquare,
+  CloudOff,
   Download,
   Keyboard,
   LayoutGrid,
@@ -22,10 +24,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import type { User } from "@/contexts/AuthContext";
+import type { ViewMode } from "./useTaskStore";
 
 interface HeaderProps {
-  view: "board" | "list";
-  onViewChange: (view: "board" | "list") => void;
+  view: ViewMode;
+  onViewChange: (view: ViewMode) => void;
   onAddTask: () => void;
   selectionMode: boolean;
   onToggleSelectionMode: () => void;
@@ -34,6 +37,8 @@ interface HeaderProps {
   onShowShortcuts: () => void;
   user: User | null;
   onSignOutClick: () => void;
+  /** False when the app is running against localStorage only. */
+  online: boolean;
 }
 
 export function Header({
@@ -47,6 +52,7 @@ export function Header({
   onShowShortcuts,
   user,
   onSignOutClick,
+  online,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/40 bg-app-bg/80 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-8">
@@ -70,7 +76,7 @@ export function Header({
           <ToggleGroup
             type="single"
             value={view}
-            onValueChange={(v) => v && onViewChange(v as "board" | "list")}
+            onValueChange={(v) => v && onViewChange(v as ViewMode)}
             className="rounded-full border border-border/50 bg-app-card p-1"
             aria-label="Switch view"
           >
@@ -90,7 +96,25 @@ export function Header({
               <List className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
               List
             </ToggleGroupItem>
+            <ToggleGroupItem
+              value="calendar"
+              aria-label="Calendar view"
+              className="rounded-full px-3 py-2 text-xs data-[state=on]:bg-app-primary data-[state=on]:text-app-primary-foreground"
+            >
+              <CalendarDays className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              Calendar
+            </ToggleGroupItem>
           </ToggleGroup>
+
+          {!online && (
+            <span
+              className="hidden items-center gap-1.5 rounded-full bg-app-muted px-3 py-1.5 text-[11px] text-muted-foreground md:inline-flex"
+              title="No API configured — tasks are stored in this browser only"
+            >
+              <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+              Offline mode
+            </span>
+          )}
 
           <div className="hidden items-center -space-x-2 lg:flex" aria-hidden="true">
             {["A", "B", "C"].map((initial) => (
