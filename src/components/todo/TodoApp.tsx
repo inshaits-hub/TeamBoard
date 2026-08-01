@@ -6,12 +6,22 @@ import { BoardView } from "./BoardView";
 import { ListView } from "./ListView";
 import { CalendarView, type CalendarRange } from "./CalendarView";
 import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "./AppSidebar";
+import type { PageId } from "./AppSidebar";
+import { MembersPage } from "./MembersPage";
+import { ProjectsPage } from "./ProjectsPage";
+import { TasksPage } from "./TasksPage";
+import { ProfilePage } from "./ProfilePage";
 import { TaskForm } from "./TaskForm";
 import { TaskPreviewSheet } from "./TaskPreviewSheet";
 import { BulkActionBar } from "./BulkActionBar";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { LiveRegion } from "./LiveRegion";
 import { SignOutDialog } from "./SignOutDialog";
+import {
+  SidebarProvider,
+  SidebarInset,
+} from "@/components/ui/sidebar";
 import {
   applyOrder,
   useTaskStore,
@@ -50,6 +60,7 @@ export function TodoApp() {
     replaceAll,
   } = useTaskStore(token);
 
+  const [currentPage, setCurrentPage] = useState<PageId>("dashboard");
   const [search, setSearch] = useState("");
   const [labelFilter, setLabelFilter] = useState<LabelType | "all">("all");
   const [dueFilter, setDueFilter] = useState<DueFilter>("all");
@@ -323,164 +334,213 @@ export function TodoApp() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [handleAddTask, toggleSelectionMode, clearSelection, selectedIds.size]);
 
+  // Determine if the current page is task-related (shows the right sidebar)
+  const isTaskPage = currentPage === "dashboard" || currentPage === "tasks";
+
   return (
-    <div className="flex min-h-dvh flex-col bg-app-bg text-foreground">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-app-primary focus:px-4 focus:py-2 focus:text-sm focus:text-app-primary-foreground"
-      >
-        Skip to tasks
-      </a>
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-dvh w-full bg-app-bg text-foreground">
+        <AppSidebar currentPage={currentPage} onNavigate={setCurrentPage} />
 
-      <Header
-        view={view}
-        onViewChange={setView}
-        onAddTask={() => handleAddTask()}
-        selectionMode={selectionMode}
-        onToggleSelectionMode={toggleSelectionMode}
-        onExport={handleExport}
-        onImport={() => fileRef.current?.click()}
-        onShowShortcuts={() => setShortcutsOpen(true)}
-        user={user}
-        onSignOutClick={() => setSignOutOpen(true)}
-        online={online}
-      />
+        <SidebarInset className="flex flex-col">
+          {/* Skip link */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-app-primary focus:px-4 focus:py-2 focus:text-sm focus:text-app-primary-foreground"
+          >
+            Skip to content
+          </a>
 
-      <div className="flex flex-1 overflow-hidden">
-        <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
-          <div className="border-b border-border/40 bg-app-bg px-4 py-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-[1600px]">
-              <SearchFilter
-                ref={searchRef}
-                search={search}
-                onSearchChange={setSearch}
-                labelFilter={labelFilter}
-                onLabelFilterChange={setLabelFilter}
-                dueFilter={dueFilter}
-                onDueFilterChange={setDueFilter}
-                sortMode={sortMode}
-                onSortModeChange={setSortMode}
-                resultCount={visibleTasks.length}
+          {currentPage === "dashboard" && (
+            <>
+              <Header
+                view={view}
+                onViewChange={setView}
+                onAddTask={() => handleAddTask()}
+                selectionMode={selectionMode}
+                onToggleSelectionMode={toggleSelectionMode}
+                onExport={handleExport}
+                onImport={() => fileRef.current?.click()}
+                onShowShortcuts={() => setShortcutsOpen(true)}
+                user={user}
+                onSignOutClick={() => setSignOutOpen(true)}
+                onTeamDashboardClick={() => setCurrentPage("members")}
+                online={online}
               />
-            </div>
-          </div>
 
-          <div className="flex-1 overflow-auto px-4 py-5 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-[1600px]">
-              {view === "board" ? (
-                <BoardView
-                  tasks={boardTasks}
-                  onUpdateTask={saveTask}
-                  onDeleteTask={handleDeleteTask}
-                  onAddTask={handleAddTask}
-                  onEditTask={handleEditTask}
-                  onOpenTask={handleOpenTask}
-                  selectionMode={selectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelect={toggleSelect}
-                  onAnnounce={announce}
-                  reorderable={sortMode === "manual" && !selectionMode}
-                  onReorder={(a, b) => reorderTasks("board", a, b)}
-                />
-              ) : view === "list" ? (
-                <ListView
-                  tasks={listTasks}
-                  onUpdateTask={saveTask}
-                  onDeleteTask={handleDeleteTask}
-                  onEditTask={handleEditTask}
-                  onOpenTask={handleOpenTask}
-                  selectionMode={selectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelect={toggleSelect}
-                  onToggleSelectAll={toggleSelectAll}
-                  onAnnounce={announce}
-                  reorderable={sortMode === "manual" && !selectionMode}
-                  onReorder={(a, b) => reorderTasks("list", a, b)}
-                />
-              ) : (
-                <CalendarView
-                  tasks={filteredTasks}
-                  selection={calendarRange}
-                  onSelectionChange={setCalendarRange}
-                  onOpenTask={handleOpenTask}
-                  onAddTask={() => handleAddTask()}
-                  onRescheduleTask={(task, dueDate) =>
-                    saveTask({ ...task, dueDate })
-                  }
-                  onAnnounce={announce}
-                />
-              )}
+              <div className="flex flex-1 overflow-hidden">
+                <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
+                  <div className="border-b border-border/40 bg-app-bg px-4 py-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-[1600px]">
+                      <SearchFilter
+                        ref={searchRef}
+                        search={search}
+                        onSearchChange={setSearch}
+                        labelFilter={labelFilter}
+                        onLabelFilterChange={setLabelFilter}
+                        dueFilter={dueFilter}
+                        onDueFilterChange={setDueFilter}
+                        sortMode={sortMode}
+                        onSortModeChange={setSortMode}
+                        resultCount={visibleTasks.length}
+                      />
+                    </div>
+                  </div>
 
-              {selectedIds.size > 0 && (
-                <BulkActionBar
-                  count={selectedIds.size}
-                  onComplete={bulkComplete}
-                  onMove={bulkMove}
-                  onPriority={bulkPriority}
-                  onDelete={bulkDelete}
-                  onClear={clearSelection}
-                />
-              )}
-            </div>
-          </div>
-        </main>
+                  <div className="flex-1 overflow-auto px-4 py-5 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-[1600px]">
+                      {view === "board" ? (
+                        <BoardView
+                          tasks={boardTasks}
+                          onUpdateTask={saveTask}
+                          onDeleteTask={handleDeleteTask}
+                          onAddTask={handleAddTask}
+                          onEditTask={handleEditTask}
+                          onOpenTask={handleOpenTask}
+                          selectionMode={selectionMode}
+                          selectedIds={selectedIds}
+                          onToggleSelect={toggleSelect}
+                          onAnnounce={announce}
+                          reorderable={sortMode === "manual" && !selectionMode}
+                          onReorder={(a, b) => reorderTasks("board", a, b)}
+                        />
+                      ) : view === "list" ? (
+                        <ListView
+                          tasks={listTasks}
+                          onUpdateTask={saveTask}
+                          onDeleteTask={handleDeleteTask}
+                          onEditTask={handleEditTask}
+                          onOpenTask={handleOpenTask}
+                          selectionMode={selectionMode}
+                          selectedIds={selectedIds}
+                          onToggleSelect={toggleSelect}
+                          onToggleSelectAll={toggleSelectAll}
+                          onAnnounce={announce}
+                          reorderable={sortMode === "manual" && !selectionMode}
+                          onReorder={(a, b) => reorderTasks("list", a, b)}
+                        />
+                      ) : (
+                        <CalendarView
+                          tasks={filteredTasks}
+                          selection={calendarRange}
+                          onSelectionChange={setCalendarRange}
+                          onOpenTask={handleOpenTask}
+                          onAddTask={() => handleAddTask()}
+                          onRescheduleTask={(task, dueDate) =>
+                            saveTask({ ...task, dueDate })
+                          }
+                          onAnnounce={announce}
+                        />
+                      )}
 
-        <Sidebar tasks={tasks} />
+                      {selectedIds.size > 0 && (
+                        <BulkActionBar
+                          count={selectedIds.size}
+                          onComplete={bulkComplete}
+                          onMove={bulkMove}
+                          onPriority={bulkPriority}
+                          onDelete={bulkDelete}
+                          onClear={clearSelection}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </main>
+
+                <Sidebar tasks={tasks} />
+              </div>
+            </>
+          )}
+
+          {currentPage === "members" && (
+            <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
+              <MembersPage />
+            </main>
+          )}
+
+          {currentPage === "projects" && (
+            <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
+              <ProjectsPage
+                tasks={tasks}
+                onAddTask={() => handleAddTask()}
+                onOpenTask={handleOpenTask}
+              />
+            </main>
+          )}
+
+          {currentPage === "tasks" && (
+            <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
+              <TasksPage
+                tasks={tasks}
+                onAddTask={() => handleAddTask()}
+                onEditTask={handleEditTask}
+                onDeleteTask={handleDeleteTask}
+                onToggleComplete={handleToggleComplete}
+              />
+            </main>
+          )}
+
+          {currentPage === "profile" && (
+            <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
+              <ProfilePage />
+            </main>
+          )}
+        </SidebarInset>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="sr-only"
+          aria-hidden="true"
+          tabIndex={-1}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleImportFile(file);
+            e.target.value = "";
+          }}
+        />
+
+        <TaskForm
+          task={editingTask}
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          onSave={(task) => {
+            const isNew = !editingTask;
+            saveTask({
+              ...task,
+              column: editingTask ? task.column : defaultColumn ?? "todo",
+            });
+            if (isNew) {
+              notifyTaskCreated(task.title);
+            } else {
+              notifyTaskUpdated(task.title);
+            }
+            announce(`${task.title} saved.`);
+          }}
+        />
+
+        <TaskPreviewSheet
+          task={previewTask}
+          open={previewTask !== null}
+          onOpenChange={(open) => {
+            if (!open) setPreviewId(null);
+          }}
+          onEdit={handleEditTask}
+          onToggleComplete={handleToggleComplete}
+          onDelete={(task) => handleDeleteTask(task.id)}
+        />
+
+        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+        <LiveRegion message={announcement} />
+
+        <SignOutDialog
+          open={signOutOpen}
+          onOpenChange={setSignOutOpen}
+          onConfirm={handleSignOut}
+          userName={user?.name}
+        />
       </div>
-
-      <input
-        ref={fileRef}
-        type="file"
-        accept="application/json,.json"
-        className="sr-only"
-        aria-hidden="true"
-        tabIndex={-1}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) void handleImportFile(file);
-          e.target.value = "";
-        }}
-      />
-
-      <TaskForm
-        task={editingTask}
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSave={(task) => {
-          const isNew = !editingTask;
-          saveTask({
-            ...task,
-            column: editingTask ? task.column : defaultColumn ?? "todo",
-          });
-          if (isNew) {
-            notifyTaskCreated(task.title);
-          } else {
-            notifyTaskUpdated(task.title);
-          }
-          announce(`${task.title} saved.`);
-        }}
-      />
-
-      <TaskPreviewSheet
-        task={previewTask}
-        open={previewTask !== null}
-        onOpenChange={(open) => {
-          if (!open) setPreviewId(null);
-        }}
-        onEdit={handleEditTask}
-        onToggleComplete={handleToggleComplete}
-        onDelete={(task) => handleDeleteTask(task.id)}
-      />
-
-      <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-      <LiveRegion message={announcement} />
-
-      <SignOutDialog
-        open={signOutOpen}
-        onOpenChange={setSignOutOpen}
-        onConfirm={handleSignOut}
-        userName={user?.name}
-      />
-    </div>
+    </SidebarProvider>
   );
 }

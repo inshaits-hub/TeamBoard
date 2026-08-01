@@ -48,6 +48,8 @@ export interface ApiUser {
   id: string;
   name: string;
   email: string;
+  role: string;
+  organization: string;
 }
 
 export interface AuthResponse {
@@ -55,11 +57,27 @@ export interface AuthResponse {
   user: ApiUser;
 }
 
+export interface TeamMemberResponse {
+  members: Array<{
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    createdAt: string;
+  }>;
+}
+
+export interface OrgInfoResponse {
+  organization: string;
+  memberCount: number;
+  role: string;
+}
+
 export const authApi = {
-  register: (name: string, email: string, password: string) =>
+  register: (name: string, email: string, password: string, organization: string) =>
     request<AuthResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, organization }),
     }),
 
   login: (email: string, password: string) =>
@@ -69,6 +87,25 @@ export const authApi = {
     }),
 
   getMe: (token: string) => request<ApiUser>("/auth/me", { token }),
+
+  createMember: (token: string, name: string, email: string, password: string) =>
+    request<{ id: string; name: string; email: string; role: string }>("/auth/members", {
+      method: "POST",
+      token,
+      body: JSON.stringify({ name, email, password }),
+    }),
+
+  listMembers: (token: string) =>
+    request<TeamMemberResponse>("/auth/members", { token }),
+
+  deleteMember: (token: string, id: string) =>
+    request<{ ok: boolean }>(`/auth/members/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      token,
+    }),
+
+  getOrgInfo: (token: string) =>
+    request<OrgInfoResponse>("/auth/org-info", { token }),
 };
 
 export interface TaskSyncPayload {

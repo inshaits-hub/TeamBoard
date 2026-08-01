@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { LayoutGrid, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { TeamBoardLogo } from "./TeamBoardLogo";
 
 interface LoginPageProps {
   onSuccess?: () => void;
@@ -16,6 +17,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [organization, setOrganization] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,12 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           setLoading(false);
           return;
         }
-        success = await signup(name.trim(), email.trim(), password);
+        if (!organization.trim()) {
+          setError("Please enter your organization name");
+          setLoading(false);
+          return;
+        }
+        success = await signup(name.trim(), email.trim(), password, organization.trim());
       } else {
         success = await login(email.trim(), password);
       }
@@ -66,11 +73,9 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       <div className="relative w-full max-w-md">
         <div className="rounded-3xl border border-border/50 bg-app-card p-8 shadow-xl backdrop-blur-2xl transition-all duration-300">
           <div className="mb-6 flex flex-col items-center gap-2">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-app-primary shadow-lg">
-              <LayoutGrid className="h-7 w-7 text-app-primary-foreground" />
-            </div>
+            <TeamBoardLogo size="lg" />
             <h1 className="mt-2 text-2xl font-bold text-app-card-foreground">
-              Team Task Board
+              TeamBoard
             </h1>
             <p className="text-sm text-muted-foreground">
               {isSignUp ? "Create your team account" : "Sign in to your account"}
@@ -79,17 +84,30 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div className="grid gap-2">
-                <Label htmlFor="signup-name">Full Name</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Input
+                    id="signup-name"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="signup-org">Organization</Label>
+                  <Input
+                    id="signup-org"
+                    type="text"
+                    placeholder="Your company or team name"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
             )}
 
             <div className="grid gap-2">

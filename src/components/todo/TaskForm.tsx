@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Users } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { parseDue, toISODate } from "./dueDate";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Task, ColumnId, Priority, LabelType } from "./types";
 import { COLUMNS, LABELS, PRIORITIES } from "./types";
 
@@ -49,6 +50,8 @@ const DEFAULT_TASK: Omit<Task, "id" | "createdAt"> = {
 };
 
 export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
+  const { user, listMembers } = useAuth();
+  const [members, setMembers] = useState<Array<{ name: string; email: string }>>([]);
   const [form, setForm] = useState<Omit<Task, "id" | "createdAt">>(DEFAULT_TASK);
 
   useEffect(() => {
@@ -59,6 +62,12 @@ export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
       setForm(DEFAULT_TASK);
     }
   }, [task, open]);
+
+  useEffect(() => {
+    listMembers().then((data) => {
+      setMembers(data.map((m) => ({ name: m.name, email: m.email })));
+    }).catch(() => {});
+  }, [listMembers, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,6 +224,33 @@ export function TaskForm({ task, open, onOpenChange, onSave }: TaskFormProps) {
                   </PopoverContent>
                 </Popover>
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="assignee" className="flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                Assignee
+              </Label>
+              <Select
+                value={form.assignee}
+                onValueChange={(v) => update("assignee", v)}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Select a team member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {user && (
+                    <SelectItem value={user.name}>
+                      {user.name} (you)
+                    </SelectItem>
+                  )}
+                  {members.map((m) => (
+                    <SelectItem key={m.email} value={m.name}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

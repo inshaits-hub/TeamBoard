@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Task } from "./types";
 import { LABELS, PRIORITIES } from "./types";
 
@@ -11,6 +12,8 @@ interface TaskEditModalProps {
 }
 
 export function TaskEditModal({ task, onClose, onSave }: TaskEditModalProps) {
+  const { user, listMembers } = useAuth();
+  const [members, setMembers] = useState<Array<{ name: string; email: string }>>([]);
   const [draft, setDraft] = useState(task);
 
   // reset the draft if a different task is opened
@@ -26,6 +29,12 @@ export function TaskEditModal({ task, onClose, onSave }: TaskEditModalProps) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  useEffect(() => {
+    listMembers().then((data) => {
+      setMembers(data.map((m) => ({ name: m.name, email: m.email })));
+    }).catch(() => {});
+  }, [listMembers]);
 
   const handleSave = () => {
     onSave(draft);
@@ -177,20 +186,31 @@ export function TaskEditModal({ task, onClose, onSave }: TaskEditModalProps) {
             </div>
 
             <div className="grid gap-1.5">
-              <label className="text-xs font-medium text-app-card-foreground">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-app-card-foreground">
+                <Users className="h-3 w-3 text-muted-foreground" />
                 Assignee
               </label>
-              <input
+              <select
                 value={draft.assignee}
                 onChange={(e) =>
                   setDraft({ ...draft, assignee: e.target.value })
                 }
                 className="
-                  h-10 rounded-xl border border-app-primary/30 bg-app-bg px-3
+                  w-full
+                  h-10 rounded-xl border border-app-primary/30 bg-app-bg px-2
                   text-sm text-app-card-foreground outline-none
                   focus:border-app-primary
                 "
-              />
+              >
+                {user && (
+                  <option value={user.name}>{user.name} (you)</option>
+                )}
+                {members.map((m) => (
+                  <option key={m.email} value={m.name}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

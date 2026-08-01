@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   CheckSquare,
@@ -10,6 +11,7 @@ import {
   MoreVertical,
   Plus,
   Upload,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -23,7 +25,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-import type { User } from "@/contexts/AuthContext";
+import { TeamBoardLogo } from "./TeamBoardLogo";
+import { useAuth, type User } from "@/contexts/AuthContext";
 import type { ViewMode } from "./useTaskStore";
 
 interface HeaderProps {
@@ -37,6 +40,7 @@ interface HeaderProps {
   onShowShortcuts: () => void;
   user: User | null;
   onSignOutClick: () => void;
+  onTeamDashboardClick: () => void;
   /** False when the app is running against localStorage only. */
   online: boolean;
 }
@@ -52,21 +56,28 @@ export function Header({
   onShowShortcuts,
   user,
   onSignOutClick,
+  onTeamDashboardClick,
   online,
 }: HeaderProps) {
+  const { listMembers } = useAuth();
+  const [members, setMembers] = useState<Array<{ name: string; email: string }>>([]);
+
+  useEffect(() => {
+    listMembers()
+      .then((data) => setMembers(data.map((m) => ({ name: m.name, email: m.email }))))
+      .catch(() => {});
+  }, [listMembers]);
+
+  const teamInitials = members.slice(0, 4).map((m) => m.name[0]?.toUpperCase() || "?");
+
   return (
     <header className="sticky top-0 z-30 border-b border-border/40 bg-app-bg/80 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-app-primary text-app-primary-foreground"
-            aria-hidden="true"
-          >
-            <LayoutGrid className="h-5 w-5" />
-          </div>
+          <TeamBoardLogo size="sm" />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold leading-tight text-app-card-foreground">
-              Homepage Design
+              {user?.organization || "Homepage Design"}
             </h1>
             <p className="text-xs text-muted-foreground">Project board</p>
           </div>
@@ -116,20 +127,31 @@ export function Header({
             </span>
           )}
 
-          <div className="hidden items-center -space-x-2 lg:flex" aria-hidden="true">
-            {["A", "B", "C"].map((initial) => (
-              <Avatar
-                key={initial}
-                className="h-8 w-8 border-2 border-app-bg text-[10px]"
-              >
-                <AvatarFallback className="bg-app-muted text-foreground">
-                  {initial}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
+          {teamInitials.length > 0 && (
+            <div className="hidden items-center -space-x-2 lg:flex">
+              {teamInitials.map((initial, i) => (
+                <Avatar
+                  key={`${initial}-${i}`}
+                  className="h-8 w-8 border-2 border-app-bg text-[10px]"
+                >
+                  <AvatarFallback className="bg-app-muted text-foreground">
+                    {initial}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+          )}
 
           <ThemeSwitcher />
+
+          <Button
+            variant="outline"
+            onClick={onTeamDashboardClick}
+            className="h-11 gap-1.5 rounded-full px-3 text-sm"
+          >
+            <Users className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Team</span>
+          </Button>
 
           <Button
             variant={selectionMode ? "default" : "outline"}
