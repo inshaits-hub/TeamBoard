@@ -32,8 +32,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
     const resolved = getResolvedTheme(theme);
-    document.documentElement.classList.toggle("dark", resolved === "dark");
-    document.documentElement.setAttribute("data-theme", theme);
+    const root = document.documentElement;
+
+    // Toggle the dark class used by the `.dark` CSS selector.
+    root.classList.toggle("dark", resolved === "dark");
+
+    // Toggle the pastel class selectors (.pastel-light / .pastel-dark) so
+    // the pastel CSS blocks in styles.css are actually activated.
+    root.classList.toggle("pastel-light", theme === "pastel-light");
+    root.classList.toggle("pastel-dark", theme === "pastel-dark");
+
+    root.setAttribute("data-theme", theme);
   }, [theme]);
 
   const setTheme = useCallback((t: Theme) => {

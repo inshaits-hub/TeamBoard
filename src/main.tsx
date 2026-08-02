@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/components/todo/NotificationProvider";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { OrgProvider } from "@/contexts/OrgContext";
 import { LoginPage } from "@/components/todo/LoginPage";
 import { TodoApp } from "@/components/todo/TodoApp";
 import "./styles.css";
@@ -37,7 +38,9 @@ createRoot(document.getElementById("root")!).render(
       <ThemeProvider>
         <NotificationProvider>
           <AuthProvider>
-            <App />
+            <OrgProvider>
+              <App />
+            </OrgProvider>
           </AuthProvider>
         </NotificationProvider>
       </ThemeProvider>

@@ -1,8 +1,36 @@
 export type Priority = "low" | "medium" | "high";
 
+export type Severity = "trivial" | "minor" | "major" | "critical" | "blocker";
+
+export const SEVERITIES: Record<Severity, { name: string; color: string }> = {
+  trivial: { name: "Trivial", color: "bg-slate-100 text-slate-500" },
+  minor: { name: "Minor", color: "bg-blue-100 text-blue-600" },
+  major: { name: "Major", color: "bg-amber-100 text-amber-700" },
+  critical: { name: "Critical", color: "bg-orange-100 text-orange-700" },
+  blocker: { name: "Blocker", color: "bg-rose-100 text-rose-700" },
+};
+
 export type LabelType = "copywriting" | "design" | "illustration" | "research";
 
 export type ColumnId = "todo" | "in-progress" | "review" | "done";
+
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  checked: boolean;
+}
+
+export interface Recurrence {
+  frequency: "daily" | "weekly" | "monthly" | "none";
+  interval: number;
+  endsOn: string;
+}
 
 export interface Task {
   id: string;
@@ -11,6 +39,15 @@ export interface Task {
   column: ColumnId;
   priority: Priority;
   label: LabelType;
+  severity: Severity;
+  reviewer: string;
+  storyPoints: number;
+  estimatedEffort: number;
+  dependencies: string[];
+  subtasks: Subtask[];
+  checklist: ChecklistItem[];
+  recurrence: Recurrence;
+  createdBy: string;
   dueDate: string;
   assignee: string;
   comments: number;

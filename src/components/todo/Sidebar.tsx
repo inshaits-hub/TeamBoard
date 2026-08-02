@@ -67,7 +67,7 @@ export function Sidebar({ tasks }: SidebarProps) {
           {ACTIVITIES.map((activity) => (
             <div key={activity.id} className="flex gap-3">
               <Avatar className="h-8 w-8 shrink-0 text-[10px]">
-                <AvatarFallback className={`${activity.color} text-white`}>
+                <AvatarFallback className={activity.color}>
                   {activity.user[0]}
                 </AvatarFallback>
               </Avatar>

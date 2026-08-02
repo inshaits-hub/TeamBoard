@@ -10,6 +10,26 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/TeamBoard/favicon.png" type="image/png" />
+    <script>
+      // Apply the saved theme before React mounts to avoid a flash of the
+      // default (:root) palette. Must stay in sync with ThemeContext.
+      (function () {
+        try {
+          var stored = localStorage.getItem("todo-theme");
+          if (stored !== "light" && stored !== "dark" && stored !== "pastel-light" && stored !== "pastel-dark") {
+            stored = "pastel-light";
+          }
+          var resolved = stored === "dark" || stored === "pastel-dark" ? "dark" : "light";
+          var root = document.documentElement;
+          if (resolved === "dark") root.classList.add("dark");
+          if (stored === "pastel-light") root.classList.add("pastel-light");
+          if (stored === "pastel-dark") root.classList.add("pastel-dark");
+          root.setAttribute("data-theme", stored);
+        } catch (e) {
+          // localStorage unavailable (private mode etc.) — safe to ignore.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

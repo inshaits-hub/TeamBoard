@@ -17,7 +17,7 @@ export function TeamBoardLogo({ size = "md", showText = false }: TeamBoardLogoPr
   return (
     <div className="flex items-center gap-3">
       <div
-        className={`grid ${s.box} place-items-center rounded-xl bg-gradient-to-br from-app-primary to-indigo-500 shadow-lg shadow-app-primary/25`}
+        className={`grid ${s.box} place-items-center rounded-xl bg-gradient-to-br from-logo-from to-logo-to shadow-lg shadow-app-primary/25`}
       >
         <LayoutGrid className={`${s.icon} text-white`} />
       </div>

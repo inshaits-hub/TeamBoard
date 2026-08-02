@@ -8,10 +8,30 @@ export const LABELS = [
   'illustration',
   'research',
 ] as const;
+export const SEVERITIES = ['trivial', 'minor', 'major', 'critical', 'blocker'] as const;
 
 export type ColumnId = (typeof COLUMN_IDS)[number];
 export type Priority = (typeof PRIORITIES)[number];
 export type LabelType = (typeof LABELS)[number];
+export type Severity = (typeof SEVERITIES)[number];
+
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  checked: boolean;
+}
+
+export interface Recurrence {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'none';
+  interval: number;
+  endsOn: string;
+}
 
 export interface ITask extends Document {
   _id: Types.ObjectId;
@@ -24,6 +44,15 @@ export interface ITask extends Document {
   column: ColumnId;
   priority: Priority;
   label: LabelType;
+  severity: Severity;
+  reviewer: string;
+  storyPoints: number;
+  estimatedEffort: number;
+  dependencies: string[];
+  subtasks: Subtask[];
+  checklist: ChecklistItem[];
+  recurrence: Recurrence;
+  createdBy: string;
   dueDate: string;
   assignee: string;
   comments: number;
@@ -61,6 +90,44 @@ const taskSchema = new Schema<ITask>(
     column: { type: String, enum: COLUMN_IDS, default: 'todo' },
     priority: { type: String, enum: PRIORITIES, default: 'medium' },
     label: { type: String, enum: LABELS, default: 'design' },
+    severity: { type: String, enum: SEVERITIES, default: 'minor' },
+    reviewer: { type: String, default: '' },
+    storyPoints: { type: Number, default: 0, min: 0 },
+    estimatedEffort: { type: Number, default: 0, min: 0 },
+    dependencies: { type: [String], default: [] },
+    subtasks: {
+      type: [
+        {
+          id: { type: String, required: true },
+          title: { type: String, required: true, maxlength: 300 },
+          done: { type: Boolean, default: false },
+        },
+      ],
+      default: [],
+    },
+    checklist: {
+      type: [
+        {
+          id: { type: String, required: true },
+          text: { type: String, required: true, maxlength: 500 },
+          checked: { type: Boolean, default: false },
+        },
+      ],
+      default: [],
+    },
+    recurrence: {
+      type: {
+        frequency: {
+          type: String,
+          enum: ['daily', 'weekly', 'monthly', 'none'],
+          default: 'none',
+        },
+        interval: { type: Number, default: 1, min: 1, max: 365 },
+        endsOn: { type: String, default: '' },
+      },
+      default: { frequency: 'none', interval: 1, endsOn: '' },
+    },
+    createdBy: { type: String, default: '' },
     dueDate: { type: String, default: '' },
     assignee: { type: String, default: 'Me' },
     comments: { type: Number, default: 0, min: 0 },

@@ -9,6 +9,18 @@ function day(offset: number): string {
   return `${d.getFullYear()}-${m}-${dd}`;
 }
 
+const DEFAULT_NEW_FIELDS = {
+  severity: "minor" as const,
+  reviewer: "",
+  storyPoints: 0,
+  estimatedEffort: 0,
+  dependencies: [] as string[],
+  subtasks: [] as Task["subtasks"],
+  checklist: [] as Task["checklist"],
+  recurrence: { frequency: "none" as const, interval: 1, endsOn: "" },
+  createdBy: "",
+};
+
 export const INITIAL_TASKS: Task[] = [
   {
     id: "t1",
@@ -22,6 +34,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 2,
     attachments: 1,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t2",
@@ -35,6 +48,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 3,
     attachments: 2,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t3",
@@ -48,6 +62,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 2,
     attachments: 1,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t4",
@@ -61,6 +76,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 5,
     attachments: 3,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t5",
@@ -74,6 +90,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 1,
     attachments: 0,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t6",
@@ -87,6 +104,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 2,
     attachments: 1,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t7",
@@ -100,6 +118,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 4,
     attachments: 2,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t8",
@@ -113,6 +132,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 2,
     attachments: 1,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t9",
@@ -126,6 +146,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 3,
     attachments: 4,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t10",
@@ -139,6 +160,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 1,
     attachments: 0,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t11",
@@ -152,6 +174,7 @@ export const INITIAL_TASKS: Task[] = [
     comments: 2,
     attachments: 2,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
   {
     id: "t12",
@@ -165,13 +188,14 @@ export const INITIAL_TASKS: Task[] = [
     comments: 6,
     attachments: 5,
     createdAt: new Date().toISOString(),
+    ...DEFAULT_NEW_FIELDS,
   },
 ];
 
 export const ACTIVITIES = [
-  { id: 1, user: "Andrea", action: "uploaded 3 documents", time: "Aug 15", color: "bg-amber-400" },
-  { id: 2, user: "Karen", action: "left some comments", time: "Aug 15", color: "bg-emerald-400" },
-  { id: 3, user: "Karen", action: "changed project description", time: "Aug 15", color: "bg-indigo-400" },
-  { id: 4, user: "Andrea", action: "uploaded 3 documents", time: "Aug 15", color: "bg-amber-400" },
-  { id: 5, user: "Karen", action: "left some comments", time: "Aug 15", color: "bg-emerald-400" },
+  { id: 1, user: "Andrea", action: "uploaded 3 documents", time: "Aug 15", color: "bg-activity-amber text-activity-amber-foreground" },
+  { id: 2, user: "Karen", action: "left some comments", time: "Aug 15", color: "bg-activity-emerald text-activity-emerald-foreground" },
+  { id: 3, user: "Karen", action: "changed project description", time: "Aug 15", color: "bg-activity-indigo text-activity-indigo-foreground" },
+  { id: 4, user: "Andrea", action: "uploaded 3 documents", time: "Aug 15", color: "bg-activity-amber text-activity-amber-foreground" },
+  { id: 5, user: "Karen", action: "left some comments", time: "Aug 15", color: "bg-activity-emerald text-activity-emerald-foreground" },
 ];

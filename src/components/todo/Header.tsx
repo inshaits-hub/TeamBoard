@@ -27,6 +27,7 @@ import {
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { TeamBoardLogo } from "./TeamBoardLogo";
 import { useAuth, type User } from "@/contexts/AuthContext";
+import { useOrg } from "@/contexts/OrgContext";
 import type { ViewMode } from "./useTaskStore";
 
 interface HeaderProps {
@@ -60,6 +61,7 @@ export function Header({
   online,
 }: HeaderProps) {
   const { listMembers } = useAuth();
+  const { organization } = useOrg();
   const [members, setMembers] = useState<Array<{ name: string; email: string }>>([]);
 
   useEffect(() => {
@@ -77,9 +79,11 @@ export function Header({
           <TeamBoardLogo size="sm" />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold leading-tight text-app-card-foreground">
-              {user?.organization || "Homepage Design"}
+              {organization.name || user?.organization || "Homepage Design"}
             </h1>
-            <p className="text-xs text-muted-foreground">Project board</p>
+            <p className="text-xs text-muted-foreground">
+              {organization.name ? `${organization.plan} · org workspace` : "Project board"}
+            </p>
           </div>
         </div>
 

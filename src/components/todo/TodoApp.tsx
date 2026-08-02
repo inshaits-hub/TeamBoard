@@ -6,12 +6,14 @@ import { BoardView } from "./BoardView";
 import { ListView } from "./ListView";
 import { CalendarView, type CalendarRange } from "./CalendarView";
 import { Sidebar } from "./Sidebar";
-import { AppSidebar } from "./AppSidebar";
+import { AppSidebar, canViewPage } from "./AppSidebar";
 import type { PageId } from "./AppSidebar";
 import { MembersPage } from "./MembersPage";
 import { ProjectsPage } from "./ProjectsPage";
 import { TasksPage } from "./TasksPage";
 import { ProfilePage } from "./ProfilePage";
+import { OrganizationPageSuspense } from "./OrganizationPage";
+import { usePermission } from "@/hooks/usePermission";
 import { TaskForm } from "./TaskForm";
 import { TaskPreviewSheet } from "./TaskPreviewSheet";
 import { BulkActionBar } from "./BulkActionBar";
@@ -43,6 +45,7 @@ const UNDO_TIMEOUT = 6000;
 
 export function TodoApp() {
   const { user, logout, token } = useAuth();
+  const { can } = usePermission();
 
   const {
     tasks,
@@ -337,6 +340,14 @@ export function TodoApp() {
   // Determine if the current page is task-related (shows the right sidebar)
   const isTaskPage = currentPage === "dashboard" || currentPage === "tasks";
 
+  // Defensive guard: if the current page is not permitted for this role,
+  // fall back to the dashboard (which every role can view).
+  useEffect(() => {
+    if (!canViewPage(currentPage, can)) {
+      setCurrentPage("dashboard");
+    }
+  }, [currentPage, can]);
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-dvh w-full bg-app-bg text-foreground">
@@ -483,6 +494,18 @@ export function TodoApp() {
           {currentPage === "profile" && (
             <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
               <ProfilePage />
+            </main>
+          )}
+
+          {(currentPage === "org-settings" ||
+            currentPage === "org-departments" ||
+            currentPage === "org-teams" ||
+            currentPage === "org-roles" ||
+            currentPage === "org-analytics" ||
+            currentPage === "org-workflows" ||
+            currentPage === "org-integrations") && (
+            <main id="main-content" className="flex flex-1 flex-col overflow-hidden">
+              <OrganizationPageSuspense page={currentPage} tasks={tasks} />
             </main>
           )}
         </SidebarInset>

@@ -1,4 +1,25 @@
 import type { Task } from "@/components/todo/types";
+import type {
+  AuditLogPage,
+  Department,
+  DepartmentPayload,
+  Invitation,
+  InvitationPayload,
+  Member,
+  MembershipUpdatePayload,
+  OrgContextResponse,
+  OrgEntity,
+  OrganizationCreatePayload,
+  OrganizationUpdatePayload,
+  Project,
+  ProjectPayload,
+  RoleInfo,
+  RoleListResponse,
+  RolePayload,
+  Team,
+  TeamPayload,
+  UserOrganization,
+} from "./orgTypes";
 
 /**
  * Base URL of the Express API, e.g. https://teamboard-api.onrender.com/api
@@ -122,6 +143,15 @@ const toServerTask = (task: Task) => ({
   column: task.column,
   priority: task.priority,
   label: task.label,
+  severity: task.severity ?? "minor",
+  reviewer: task.reviewer ?? "",
+  storyPoints: task.storyPoints ?? 0,
+  estimatedEffort: task.estimatedEffort ?? 0,
+  dependencies: task.dependencies ?? [],
+  subtasks: task.subtasks ?? [],
+  checklist: task.checklist ?? [],
+  recurrence: task.recurrence ?? { frequency: "none", interval: 1, endsOn: "" },
+  createdBy: task.createdBy ?? "",
   dueDate: /^\d{4}-\d{2}-\d{2}$/.test(task.dueDate ?? "") ? task.dueDate : "",
   assignee: task.assignee ?? "Me",
   comments: task.comments ?? 0,
@@ -205,5 +235,284 @@ export const tokenStore = {
     } catch {
       /* storage blocked */
     }
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Organization API — mirrors backend/src/routes/orgRoutes.ts          */
+/* ------------------------------------------------------------------ */
+
+const orgPath = (path: string) => `/org${path}`;
+
+/**
+ * Helper that picks the active organization header. When no id is provided
+ * the backend falls back to the caller's first (or only) membership.
+ */
+function orgHeaders(token: string, organizationId?: string): Record<string, string> {
+  return organizationId ? { "x-organization-id": organizationId } : {};
+}
+
+export const orgApi = {
+  /* Context & organizations */
+  listOrganizations: (token: string) =>
+    request<{ organizations: UserOrganization[] }>(orgPath("/organizations"), { token }),
+
+  createOrganization: (token: string, payload: OrganizationCreatePayload) =>
+    request<OrgEntity>(orgPath("/organizations"), {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  getContext: (token: string, organizationId?: string) =>
+    request<OrgContextResponse>(orgPath("/context"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  updateOrganization: (
+    token: string,
+    payload: OrganizationUpdatePayload,
+    organizationId?: string
+  ) =>
+    request<OrgEntity>(orgPath("/organization"), {
+      method: "PATCH",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  deleteOrganization: (token: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath("/organization"), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  /* Departments */
+  listDepartments: (token: string, organizationId?: string) =>
+    request<{ departments: Department[] }>(orgPath("/departments"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  createDepartment: (
+    token: string,
+    payload: DepartmentPayload,
+    organizationId?: string
+  ) =>
+    request<Department>(orgPath("/departments"), {
+      method: "POST",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  updateDepartment: (
+    token: string,
+    id: string,
+    payload: Partial<DepartmentPayload>,
+    organizationId?: string
+  ) =>
+    request<Department>(orgPath(`/departments/${encodeURIComponent(id)}`), {
+      method: "PATCH",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  deleteDepartment: (token: string, id: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath(`/departments/${encodeURIComponent(id)}`), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  /* Projects */
+  listProjects: (token: string, organizationId?: string) =>
+    request<{ projects: Project[] }>(orgPath("/projects"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  createProject: (token: string, payload: ProjectPayload, organizationId?: string) =>
+    request<Project>(orgPath("/projects"), {
+      method: "POST",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  updateProject: (
+    token: string,
+    id: string,
+    payload: Partial<ProjectPayload>,
+    organizationId?: string
+  ) =>
+    request<Project>(orgPath(`/projects/${encodeURIComponent(id)}`), {
+      method: "PATCH",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  deleteProject: (token: string, id: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath(`/projects/${encodeURIComponent(id)}`), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  /* Teams */
+  listTeams: (token: string, organizationId?: string) =>
+    request<{ teams: Team[] }>(orgPath("/teams"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  createTeam: (token: string, payload: TeamPayload, organizationId?: string) =>
+    request<Team>(orgPath("/teams"), {
+      method: "POST",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  updateTeam: (
+    token: string,
+    id: string,
+    payload: Partial<TeamPayload>,
+    organizationId?: string
+  ) =>
+    request<Team>(orgPath(`/teams/${encodeURIComponent(id)}`), {
+      method: "PATCH",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  deleteTeam: (token: string, id: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath(`/teams/${encodeURIComponent(id)}`), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  /* Roles */
+  listRoles: (token: string, organizationId?: string) =>
+    request<RoleListResponse>(orgPath("/roles"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  createRole: (token: string, payload: RolePayload, organizationId?: string) =>
+    request<RoleInfo>(orgPath("/roles"), {
+      method: "POST",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  updateRole: (
+    token: string,
+    id: string,
+    payload: Partial<RolePayload>,
+    organizationId?: string
+  ) =>
+    request<RoleInfo>(orgPath(`/roles/${encodeURIComponent(id)}`), {
+      method: "PATCH",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  deleteRole: (token: string, id: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath(`/roles/${encodeURIComponent(id)}`), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  /* Members & memberships */
+  listMembers: (token: string, organizationId?: string) =>
+    request<{ members: Member[] }>(orgPath("/members"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  updateMembership: (
+    token: string,
+    id: string,
+    payload: MembershipUpdatePayload,
+    organizationId?: string
+  ) =>
+    request<Member>(orgPath(`/members/${encodeURIComponent(id)}`), {
+      method: "PATCH",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  removeMembership: (token: string, id: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath(`/members/${encodeURIComponent(id)}`), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  grantScopedRole: (
+    token: string,
+    userId: string,
+    payload: MembershipUpdatePayload,
+    organizationId?: string
+  ) =>
+    request<Member>(orgPath(`/members/${encodeURIComponent(userId)}/grants`), {
+      method: "POST",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  /* Invitations */
+  listInvitations: (token: string, organizationId?: string) =>
+    request<{ invitations: Invitation[] }>(orgPath("/invitations"), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  createInvitation: (
+    token: string,
+    payload: InvitationPayload,
+    organizationId?: string
+  ) =>
+    request<Invitation>(orgPath("/invitations"), {
+      method: "POST",
+      token,
+      headers: orgHeaders(token, organizationId),
+      body: JSON.stringify(payload),
+    }),
+
+  revokeInvitation: (token: string, id: string, organizationId?: string) =>
+    request<{ ok: boolean }>(orgPath(`/invitations/${encodeURIComponent(id)}`), {
+      method: "DELETE",
+      token,
+      headers: orgHeaders(token, organizationId),
+    }),
+
+  /* Audit logs */
+  listAuditLogs: (
+    token: string,
+    organizationId?: string,
+    options?: { page?: number; limit?: number; entityType?: string }
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.page) params.set("page", String(options.page));
+    if (options?.limit) params.set("limit", String(options.limit));
+    if (options?.entityType) params.set("entityType", options.entityType);
+    const qs = params.toString();
+    return request<AuditLogPage>(orgPath(`/audit-logs${qs ? `?${qs}` : ""}`), {
+      token,
+      headers: orgHeaders(token, organizationId),
+    });
   },
 };

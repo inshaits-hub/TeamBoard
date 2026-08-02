@@ -3,6 +3,7 @@ import {
   COLUMN_IDS,
   LABELS,
   PRIORITIES,
+  SEVERITIES,
 } from '../models/taskModel';
 
 export const registerSchema = z.object({
@@ -44,6 +45,24 @@ const isoDate = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD')
   .or(z.literal(''));
 
+const subtaskSchema = z.object({
+  id: z.string().trim().min(1).max(100),
+  title: z.string().trim().min(1).max(300),
+  done: z.boolean().default(false),
+});
+
+const checklistItemSchema = z.object({
+  id: z.string().trim().min(1).max(100),
+  text: z.string().trim().min(1).max(500),
+  checked: z.boolean().default(false),
+});
+
+const recurrenceSchema = z.object({
+  frequency: z.enum(['daily', 'weekly', 'monthly', 'none']).default('none'),
+  interval: z.number().int().min(1).max(365).default(1),
+  endsOn: isoDate.default(''),
+});
+
 export const taskSchema = z.object({
   clientId: z.string().trim().min(1).max(100),
   title: z.string().trim().min(1, 'Title is required').max(200),
@@ -51,6 +70,15 @@ export const taskSchema = z.object({
   column: z.enum(COLUMN_IDS).default('todo'),
   priority: z.enum(PRIORITIES).default('medium'),
   label: z.enum(LABELS).default('design'),
+  severity: z.enum(SEVERITIES).default('minor'),
+  reviewer: z.string().max(80).default(''),
+  storyPoints: z.number().int().min(0).max(1000).default(0),
+  estimatedEffort: z.number().int().min(0).max(10000).default(0),
+  dependencies: z.array(z.string().trim().min(1)).max(200).default([]),
+  subtasks: z.array(subtaskSchema).max(200).default([]),
+  checklist: z.array(checklistItemSchema).max(500).default([]),
+  recurrence: recurrenceSchema.default({ frequency: 'none', interval: 1, endsOn: '' }),
+  createdBy: z.string().max(80).default(''),
   dueDate: isoDate.default(''),
   assignee: z.string().max(80).default('Me'),
   comments: z.number().int().min(0).default(0),
