@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import taskRoutes from './routes/taskRoutes';
+import orgRoutes from './routes/orgRoutes';
 import { env } from './config/env';
 import { errorHandler, notFound } from './middleware/errorMiddleware';
 
@@ -31,6 +32,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/org', orgRoutes);
+
 
 app.use(notFound);
 app.use(errorHandler);

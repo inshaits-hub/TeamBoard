@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
 import User from '../models/userModel';
+import Organization from '../models/org/organizationModel';
+import Membership from '../models/org/membershipModel';
+import Project from '../models/org/projectModel';
+import { ensureSystemRoles } from '../services/permissionService';
 import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/authMiddleware';
@@ -43,11 +47,41 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     role: 'admin',
   });
 
+  // Every signup provisions an organization with the creator as Org Admin.
+  const roles = await ensureSystemRoles();
+  const orgAdmin = roles.get('org_admin');
+  if (orgAdmin) {
+    let slug =
+      organization
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 50) || `org-${String(user._id).slice(-6)}`;
+    let attempt = 1;
+    while (await Organization.exists({ slug })) slug = `${slug}-${attempt++}`;
+
+    const org = await Organization.create({ name: organization, slug, owner: user._id });
+    await Membership.create({
+      organization: org._id,
+      user: user._id,
+      role: orgAdmin._id,
+      scopeType: 'organization',
+    });
+    await Project.create({
+      organization: org._id,
+      name: 'General',
+      key: 'GEN',
+      description: 'Your first project.',
+      lead: user._id,
+    });
+  }
+
   res.status(201).json({
     token: generateToken(user._id.toString()),
     user: publicUser(user),
   });
 });
+
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const parsed = loginSchema.safeParse(req.body);
